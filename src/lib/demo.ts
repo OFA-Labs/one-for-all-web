@@ -55,7 +55,7 @@ export type Draft = {
   file?: string;
   declaration?: string;
 };
-export type Scenario = {
+type Scenario = {
   id: ScenarioId;
   name: string;
   prompt: string;
@@ -519,62 +519,5 @@ export const historyRows = [
     timestamp: "2026-11-14T10:17:00+05:30",
     tier: "unknown",
     scenario: "pr" as ScenarioId,
-  },
-];
-export const jobRows = [
-  {
-    id: 1,
-    title: "Machine Learning Engineer",
-    company: "Fieldwork",
-    location: "Gurugram",
-    mode: "Hybrid",
-    salary: 12,
-    score: 94,
-    why: "Matches ML engineering, NCR and salary floor.",
-    unknown: "Team size not listed.",
-  },
-  {
-    id: 2,
-    title: "Applied AI Engineer",
-    company: "Northstar Labs",
-    location: "Noida",
-    mode: "On-site",
-    salary: 10,
-    score: 88,
-    why: "Voice AI experience is directly relevant.",
-    unknown: "On-call expectations not stated.",
-  },
-  {
-    id: 3,
-    title: "ML Platform Engineer",
-    company: "Common Ground",
-    location: "Remote",
-    mode: "Remote",
-    salary: 14,
-    score: 85,
-    why: "Strong Python and deployment fit.",
-    unknown: "Requires an unconfirmed cloud certification.",
-  },
-  {
-    id: 4,
-    title: "Machine Learning Engineer II",
-    company: "Monsoon",
-    location: "Pune",
-    mode: "Hybrid",
-    salary: 16,
-    score: 72,
-    why: "Above salary floor; relevant technical stack.",
-    unknown: "Relocation conflicts with NCR preference.",
-  },
-  {
-    id: 5,
-    title: "Junior AI Engineer",
-    company: "Contour",
-    location: "Delhi",
-    mode: "On-site",
-    salary: 8.5,
-    score: 79,
-    why: "Entry requirements and location fit.",
-    unknown: "Salary range needs a fresh source.",
   },
 ];

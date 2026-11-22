@@ -1,4 +1,4 @@
-import { TaskDetail } from "@/components/task-detail";
+import { TaskDetail } from "@/components/tasks/task-detail";
 export default async function Page({
   params,
 }: {

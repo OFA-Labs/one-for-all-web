@@ -1,4 +1,4 @@
-import { AuthScreen } from "@/components/account";
+import { AuthScreen } from "@/features/account";
 export default function Page() {
   return <AuthScreen mode="sign-in" />;
 }

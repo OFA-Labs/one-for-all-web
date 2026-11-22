@@ -26,7 +26,7 @@ sequence. Navigation preserves the state; resetting local demo data cancels it.
 
 The supplied introduction plays once from 0 to 7.292 seconds. Playback then repeats
 only the glowing heart segment from 5.5 to 7.292 seconds. Measured footage peaks
-provide the shared pump clock in `src/lib/reactor-beat.ts`, keeping startup
+provide the shared pump clock in `src/lib/reactor/reactor-beat.ts`, keeping startup
 translations synchronized with the heart. Header, content, sidebar, and mobile
 navigation move together during startup only.
 
