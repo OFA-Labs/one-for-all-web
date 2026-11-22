@@ -1,0 +1,22 @@
+# Dictation decisions
+
+- Scope / native implementation versus frontend simulation / latest user instruction explicitly requires frontend only; the native requirements are a handoff, not authorization to implement them.
+- Stack / convert to Electron versus extend Next.js / retain the actual Next.js web repository and existing dependencies.
+- Hotkey placement / native thread versus DOM listener / only a consent-gated page-local Caps Lock listener is implemented. It cannot capture other Windows apps or reserve the OS Caps state.
+- Services / introduce real capture/STT/insertion versus adapters / define typed abortable interfaces, instantiate only a mock adapter, and annotate every native replacement seam with `BACKEND NOT IMPLEMENTED`.
+- Presentation / new product theme versus existing black/white UI / retain the existing typography and palette; use the prompt's compact dark indicator.
+- Target / external applications versus sandbox / simulate Notepad, code editor and chat targets inside the page; never focus or write to an external process.
+- Meter and sounds / real audio versus placeholder / level samples are explicitly simulated; native level metering and sound cues remain disconnected.
+- Consent / auto-enable versus explicit enable / default off; require explicit preview consent; never restore an enabled hook state after reload.
+- Recovery / disk audio versus browser preview data / retain only mock recovery tokens and sample transcripts in session storage, with explicit discard and expiry. No audio is captured or stored.
+- Clipboard / automatic OS clipboard manipulation versus explicit frontend copy / automatic fallback uses a preview clipboard only; a user-clicked Copy text button may use the browser Clipboard API. Native snapshot/restore protocols are not implemented.
+- Git / initialize repository versus leave workspace intact / no Git repository exists, so branch/commit checkpoints are not available.
+- Native QA / execute pasted ctypes harness versus document it / do not install pywinauto, inject input, or run native harnesses; document the remaining manual/native gates.
+- Parameters / detected root is `C:/Users/jaiva/OneDrive/Desktop/voice-agents/one-for-all-web`; run `npm run dev`, build `npm run build`, test `npm test`; no indicator reference was attached, so use §7's dark-pill geometry.
+- Defaults / retain CapsLock, original target, injected keys off, 120 minutes, 24 hours, sound-cue and close-to-tray preferences on; sounds/tray remain disconnected native preferences.
+- Timing / mock startup, transcription and retries use short reviewable delays; these are not real service timeouts, latency budgets, or retry/transport implementations.
+- Audio mode / no existing capture/STT implementation was found, only handoff contracts; the batch-shaped Promise is a UI mock and does not replace or convert a real service.
+- Production validation / if OneDrive locks generated build files, build an identical source copy in a temporary directory with linked existing dependencies/public assets; use Webpack and the normal production server for verification, without stopping sync or the live dev server.
+- Handoff transport / invent an HTTP endpoint versus describe the real seam / mark dictation as a local-adapter contract and extend registry validation to accept that transport; no API route is fabricated.
+- Regression / legacy Reader fragment could resolve before the streamed client tree mounted / perform the initial workspace fragment scroll after hydration, preserving the existing O F A design and controls.
+- Accessibility / human-readable tab values produced whitespace in Radix IDs / use stable slug values while retaining Notepad, Code editor and Chat labels; audit every tab and active dictation UI.

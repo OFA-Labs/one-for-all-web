@@ -1,0 +1,38 @@
+[
+  {
+    "screen": "consent",
+    "violations": []
+  },
+  {
+    "screen": "listening",
+    "violations": []
+  },
+  {
+    "screen": "Notepad",
+    "violations": []
+  },
+  {
+    "screen": "Code editor",
+    "violations": []
+  },
+  {
+    "screen": "Chat",
+    "violations": []
+  },
+  {
+    "screen": "fallback-error",
+    "violations": []
+  },
+  {
+    "screen": "mobile-listening",
+    "violations": []
+  },
+  {
+    "screen": "mobile-listening",
+    "width": 375,
+    "overflow": false,
+    "pillHeight": 44,
+    "focusedText": true,
+    "nativeBehaviorVerified": false
+  }
+]

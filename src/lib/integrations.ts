@@ -1,0 +1,1252 @@
+export type Feature = {
+  id: string;
+  name: string;
+  module: string;
+  spec: string;
+  purpose: string;
+  frontend: string[];
+  backend: string[];
+  data: string;
+  api: {
+    transport?: "http" | "local-adapter";
+    method: string;
+    path: string;
+    auth: string;
+    request: object;
+    response: object;
+  };
+  rules: string[];
+  success: string;
+  errors: string[];
+};
+const feature = (f: Feature): Feature => f;
+export const features: Feature[] = [
+  feature({
+    id: "auth.email",
+    name: "Email sign-in and registration",
+    module: "Account",
+    spec: "J2, B11.1–3",
+    purpose:
+      "Create an adult, consented account or securely resume a member session.",
+    frontend: [
+      "Email/password validation, consent and adult checkboxes",
+      "Sign-in, registration, recovery and explicit demo-role entry",
+    ],
+    backend: [
+      "Implement identity provider, email verification and bot protection",
+      "Hash credentials or delegate to a managed identity provider; issue secure HttpOnly sessions",
+      "Enforce rate limits, CSRF protection, session revocation and server-side roles",
+    ],
+    data: "Email, password (never logged), consent version/time, adult assertion; user ID, role, verified status and session expiry.",
+    api: {
+      method: "POST",
+      path: "/v1/auth/sessions",
+      auth: "Public; rate limited, CSRF protection",
+      request: { email: "member@example.test", password: "<never log>" },
+      response: {
+        user: { id: "u_123", role: "member", emailVerified: true },
+        next: "/onboarding",
+      },
+    },
+    rules: [
+      "Require versioned privacy consent and adult confirmation on sign-up",
+      "Owner privileges are assigned server-side, never by the preview role selector",
+    ],
+    success:
+      "Set the secure cookie, route verified accounts to onboarding or the dashboard; show verification instructions otherwise.",
+    errors: [
+      "Invalid credentials without account enumeration",
+      "Unverified email, expired session, bot challenge, rate limit",
+      "Consent not accepted or adult requirement not met",
+    ],
+  }),
+  feature({
+    id: "auth.google",
+    name: "Continue with Google",
+    module: "Account",
+    spec: "J2, B6.8",
+    purpose:
+      "Sign into ONE FOR ALL with Google identity, separately from Drive file access.",
+    frontend: [
+      "Google entry button and handoff dialog",
+      "Onboarding destination preview",
+    ],
+    backend: [
+      "Configure Google OAuth client and redirect allowlist",
+      "Validate state, nonce and callback tokens; create or match account",
+      "Issue revocable secure session; collect missing consent before browser pairing",
+    ],
+    data: "State/nonce, auth code; user ID, verified email, display name, onboarding status. Never send the client secret to the browser.",
+    api: {
+      method: "GET",
+      path: "/v1/auth/google/start",
+      auth: "Public with state and nonce",
+      request: { returnTo: "/onboarding" },
+      response: { redirectUrl: "<Google authorization URL>" },
+    },
+    rules: [
+      "Identity OAuth does not grant Drive/Gmail permissions",
+      "Return paths must be allowlisted",
+    ],
+    success:
+      "Full-page redirect to consent, validate callback, restore destination and collect adult/privacy consent.",
+    errors: [
+      "User cancelled consent",
+      "Wrong account, invalid state, replayed code",
+      "Provider unreachable or unverified app",
+    ],
+  }),
+  feature({
+    id: "auth.recovery",
+    name: "Password recovery and verification",
+    module: "Account",
+    spec: "J2 entry experience",
+    purpose: "Recover access without exposing whether an email is registered.",
+    frontend: ["Validated recovery email form", "Neutral response preview"],
+    backend: [
+      "Generate single-use expiring recovery/verification tokens",
+      "Deliver email and implement secure reset flow",
+      "Invalidate prior sessions when required; audit attempts",
+    ],
+    data: "Email and return path; neutral delivery result. Reset token is single-use and kept out of analytics.",
+    api: {
+      method: "POST",
+      path: "/v1/auth/recovery",
+      auth: "Public, rate limited",
+      request: { email: "member@example.test" },
+      response: { message: "If eligible, instructions have been sent." },
+    },
+    rules: [
+      "Do not reveal registered accounts",
+      "Allow password managers and paste",
+    ],
+    success:
+      "Show a neutral check-email state; callback displays verified or reset form.",
+    errors: [
+      "Expired or already-used link",
+      "Delivery delay, provider error",
+      "Excessive attempts",
+    ],
+  }),
+  feature({
+    id: "voice.session",
+    name: "Live voice and interruption",
+    module: "Voice",
+    spec: "B4.1, B5.1–5, B5.7–8, B12",
+    purpose:
+      "Talk in the website while task actions hold immediately when speech starts.",
+    frontend: [
+      "Fourteen orb states, transcript and typed fallback",
+      "Push-to-talk preference and simulated listening controls",
+      "Pause/resume/cancel plus visible provider and browser failure states",
+    ],
+    backend: [
+      "Negotiate EU-hosted WebRTC with Pipecat and Gradium; choose relay through a 4G trial",
+      "Implement floor manager and ordered task events; one speaking device per account",
+      "Dip ≤100ms, hold by 250ms, cut by 2 words/600ms; measure actual client timings",
+      "Rotate warm connection at 40min; close transcription after 60s silence; enforce credits",
+    ],
+    data: "Session/device/turn IDs, audio frames, speech start/end, actual playback timestamps; numbered orb events and final transcripts. No raw mic recording retained.",
+    api: {
+      method: "POST",
+      path: "/v1/voice/sessions",
+      auth: "Visitor token with quotas or member session",
+      request: {
+        deviceId: "device_1",
+        languageProfile: "en",
+        pushToTalk: false,
+      },
+      response: {
+        sessionId: "vs_1",
+        transport: "webrtc",
+        negotiation: "<short-lived transport description>",
+        expiresIn: 2400,
+      },
+    },
+    rules: [
+      "Website owns audio; extension never handles microphone",
+      "Gradium unavailable means text-only, never a silent provider switch",
+      "Transcription selected per person, not per sentence",
+      "Speak approval read-backs before progress; wait 700ms after user speech",
+    ],
+    success:
+      "Drive Listening from real mic signals and Speaking from actual audio; synchronize other states from ordered server events.",
+    errors: [
+      "Mic denied: retain typing",
+      "Transport/relay failure or iPhone echo",
+      "Credits exhausted, Gradium down, model down",
+      "Newer device becomes speaker; reconnect without stale event replay",
+    ],
+  }),
+  feature({
+    id: "task.start",
+    name: "Request screening and frozen plan",
+    module: "Tasks",
+    spec: "B6.1–3, B7.4–5",
+    purpose:
+      "Turn the user's own request into a visible immutable plan before opening any outside content.",
+    frontend: [
+      "Typed request, illustrative scenario selection and plan timeline",
+      "Refusal and clarification samples; queue/add/replace choices",
+    ],
+    backend: [
+      "Implement start_task request screen using structural rules and a second model opinion; stricter wins",
+      "Classify Level 1–4 before tools and log reason codes",
+      "Create LangGraph graph, freeze sites/steps/recipients, dispatch ≤4 tab workers",
+      "Enforce 40 actions/6min per worker, 30min task and site caps",
+    ],
+    data: "Utterance, selected device, explicit facts; task ID, policy decision, frozen plan version/hash, steps, sites and recipients.",
+    api: {
+      method: "POST",
+      path: "/v1/tasks",
+      auth: "Member for personal Chrome; quota-limited guest for Playground",
+      request: {
+        instruction: "Ask the team to review PR #142",
+        deviceId: "device_1",
+        mode: "personal",
+      },
+      response: {
+        taskId: "task_1",
+        decision: "allow",
+        planVersion: 1,
+        sites: ["github.com", "slack.com"],
+        status: "planning",
+      },
+    },
+    rules: [
+      "Outside text may fill values but never add steps, sites or recipients",
+      "Never fake identities/engagement, bypass CAPTCHA, type passwords or make payments",
+      "One foreground task and at most three queued; clarify borderline identity requests",
+    ],
+    success:
+      "Render numbered events, frozen plan and site cards; decline creates no tools or tabs.",
+    errors: [
+      "Level 4 decline with reason",
+      "Missing intent or conflicting facts",
+      "Budget limit, offline browser, unauthenticated personal task",
+      "Worker fails once then screenshot-backed failure",
+    ],
+  }),
+  feature({
+    id: "task.control",
+    name: "Pause, resume, cancel and amend",
+    module: "Tasks",
+    spec: "J5, B5.3, B7.5",
+    purpose:
+      "Keep the user in control without losing work or repeating consequential actions.",
+    frontend: [
+      "Spacebar pause, resume, cancel confirmation and driving state",
+      "Local queue and state transition preview",
+    ],
+    backend: [
+      "Implement idempotent pause/resume/cancel/amend commands",
+      "Revoke unused approvals on cancel; leave tabs open",
+      "Checkpoint and re-brief on resume; verify unknown intents before retrying",
+      "Release backchannel holds and parse negative/quoted interruption phrases correctly",
+    ],
+    data: "Task ID, command ID, attempt, plan version, spoken/typed instruction; accepted status, already-sent actions and resumable checkpoint.",
+    api: {
+      method: "POST",
+      path: "/v1/tasks/{taskId}/commands",
+      auth: "Owning user or authenticated linked Telegram identity",
+      request: { command: "pause", commandId: "cmd_1" },
+      response: {
+        status: "paused",
+        revokedApprovals: [],
+        committedActions: [],
+      },
+    },
+    rules: [
+      "Stop/wait/ruk pause; cancel aborts; don't stop and wait for approval do not pause",
+      "Never undo committed work automatically",
+      "Paused >10min requires a fresh worker brief",
+    ],
+    success:
+      "Immediate held state; acknowledge action boundary; resume after fresh observation and explicit confirmation when user drove.",
+    errors: [
+      "Task already ended",
+      "Command arrives after action sent",
+      "Stale plan version, disconnected device",
+      "Amendment changes site/recipient: require explicit user confirmation",
+    ],
+  }),
+  feature({
+    id: "task.events",
+    name: "Live tabs, timeline and transcript",
+    module: "Tasks",
+    spec: "B4.1, B7.3, B7.11",
+    purpose: "Show the exact state and evidence of work on laptop and phone.",
+    frontend: [
+      "Stacked tab decks, scrollable capture history on hover, and a full tab conversation dialog",
+      "Event timeline, transcript flags and task detail routes",
+    ],
+    backend: [
+      "Provide numbered SSE/task events and authenticated snapshot recovery",
+      "Forward extension frames from ONE FOR ALL-group tabs only",
+      "About 1fps per tile and 5fps enlarged; mask sensitive data before storage/traces",
+      "Carry task/step/attempt/worker/device/tab/gate/approval/voice correlation IDs",
+    ],
+    data: "Sequence, event type/time, bounded message, task IDs, private screenshot references; no raw page text in voice loop.",
+    api: {
+      method: "GET / SSE",
+      path: "/v1/tasks/{taskId}/events",
+      auth: "Task owner; short-lived signed frame access",
+      request: { afterSequence: 24 },
+      response: {
+        sequence: 25,
+        type: "approval.required",
+        taskId: "task_1",
+        approvalId: "ap_1",
+      },
+    },
+    rules: [
+      "Apply events in sequence; detect gaps and refresh",
+      "Never show frames from sensitive sites, password fields or while the user is driving",
+      "Worker claims alone are never verification",
+    ],
+    success:
+      "Recover missed events, announce meaningful status and display private tab frames only when allowed.",
+    errors: [
+      "Out-of-order/duplicate event",
+      "Gap after reconnect",
+      "Screenshot redacted or expired",
+      "Tab removed, browser asleep, unauthorized subscriber",
+    ],
+  }),
+  feature({
+    id: "approval.commit",
+    name: "Park-and-commit approval",
+    module: "Approvals",
+    spec: "B6.3–6, B7.5–6",
+    purpose:
+      "Approve exactly what the page says before any externally visible consequence.",
+    frontend: [
+      "Exact sample payloads, accounts/files/declarations, edit and item selection",
+      "Page-changed, expired, already-decided and partial-approval previews",
+      "Single-action voice-code eligibility explanation; tap-only multi-item cards",
+    ],
+    backend: [
+      "Build cards from extension's fixed-code fresh page reading, not worker prose",
+      "Issue signed single-use 60s commit token bound to user/task/tab/payload hash",
+      "Extension re-reads and compares before making final click; ledger intent→committed→verified",
+      "Reject changed snapshots, forged/reused tokens and double-device decisions atomically",
+      "24h review expiry, 30min rejected-draft retention, sequential commits",
+    ],
+    data: "Approval ID/revision, site/account, every field including hidden values, files, declarations, snapshot hash; selected item IDs and exact decision, evidence tier.",
+    api: {
+      method: "POST",
+      path: "/v1/approvals/{id}/decisions",
+      auth: "Owning user; CSRF and first-decision-wins",
+      request: {
+        revision: 2,
+        decision: "approve",
+        items: ["slack_1"],
+        snapshotHash: "<hash>",
+      },
+      response: {
+        status: "accepted",
+        commitStatus: "intent",
+        tokenExpiresIn: 60,
+      },
+    },
+    rules: [
+      "No always-allow consequential actions",
+      "Voice: one low-risk item, read-back ended +500ms, final transcript ≤15s, approve + two-digit code, no negation; code is never spoken",
+      "New recipients, documents, settings, deletion, declarations and multi-item cards are tap-only",
+    ],
+    success:
+      "Show committing, then evidence. Tier A alone or B+C counts verified; unknown is reported and never blindly retried.",
+    errors: [
+      "409 page changed; invalidate and rebuild card",
+      "409 already decided on another device",
+      "410 approval/token expired",
+      "Interrupted after first commit; report partial results",
+      "Tier B only: submitted, not yet confirmed; D never counts",
+    ],
+  }),
+  feature({
+    id: "approval.question",
+    name: "Clarifications and saved facts",
+    module: "Approvals",
+    spec: "B6.7, B9",
+    purpose:
+      "Ask only for facts that cannot safely be inferred and remember confirmed answers.",
+    frontend: [
+      "Relocation question, draft edits and confirmed resume facts",
+      "Editable profile preference form",
+    ],
+    backend: [
+      "Create structured questions referencing missing facts",
+      "Use confirmed profile facts, never invent qualifications or declarations",
+      "Reminder once after 20s; park unanswered item while others continue",
+    ],
+    data: "Question/task ID, field, known fact/provenance, answer and remember flag; updated plan values without new steps.",
+    api: {
+      method: "POST",
+      path: "/v1/questions/{id}/answer",
+      auth: "Task owner",
+      request: { answer: "NCR only", remember: true },
+      response: { accepted: true, factId: "fact_1", resumeStep: "prepare" },
+    },
+    rules: [
+      "Ask predictable facts up front, once",
+      "Conflicting external claims cannot overwrite user facts",
+    ],
+    success: "Show saved-source annotation and resume only the affected step.",
+    errors: [
+      "Invalid answer, stale question",
+      "No answer: reminder then park",
+      "Fact conflict requires confirmation",
+    ],
+  }),
+  feature({
+    id: "browser.pair",
+    name: "Connect this browser",
+    module: "Browser",
+    spec: "J2, B7.3, E1",
+    purpose:
+      "Bind one user's Chromium extension to their account with a revocable device key.",
+    frontend: [
+      "Install/pair steps, browser list and primary-device selector",
+      "Extension toolbar, side panel and debugging-bar UI mockups",
+    ],
+    backend: [
+      "Publish/audit Manifest V3 Nanobrowser-derived control layer or own audited alternative",
+      "Website hands extension a one-time code; exchange for short-lived revocable device key",
+      "Outgoing encrypted WebSocket, 20s heartbeat, wake/reconnect trials",
+      "Preserve Apache-2.0/NOTICE on any fork; pin upstream and mark changes",
+    ],
+    data: "One-time pairing code/expiry, device label/browser version, device public key; device ID, last seen, primary flag. No model keys in extension.",
+    api: {
+      method: "POST",
+      path: "/v1/devices/pairing",
+      auth: "Member session; exchange endpoint also verifies one-time code",
+      request: { label: "Chrome on your laptop" },
+      response: { pairingId: "pair_1", code: "<single-use>", expiresIn: 120 },
+    },
+    rules: [
+      "ONE FOR ALL group only; user retains debugging-bar Cancel and Alt+Shift+J",
+      "No remote code, password access, private-network pages, arbitrary script or coordinate batches",
+      "Pairing alone never authorizes a commit",
+    ],
+    success:
+      "Actual verified handshake shows online; first safe Playground task offered.",
+    errors: [
+      "Extension missing, code expired/replayed",
+      "Store review pending: documented developer-mode fallback",
+      "Browser asleep, heartbeat timeout",
+      "Unsupported browser or duplicate pairing",
+    ],
+  }),
+  feature({
+    id: "browser.permissions",
+    name: "Site permissions and local hard rules",
+    module: "Browser",
+    spec: "B6.2–3, B6.8, B11.2",
+    purpose:
+      "Restrict browser actions to user-approved sites inside the frozen plan.",
+    frontend: [
+      "Once/always access card, revocable site list and blocklist preview",
+      "Sensitive-site and You-are-driving states",
+    ],
+    backend: [
+      "Enforce site permission on server and locally in extension",
+      "Hard-block passwords/CAPTCHA, private addresses, outside-group tabs and non-plan recipients",
+      "Implement supported-site commit tripwire after feasibility trial; fail closed",
+      "Run Playground canary every 10min; kill switch if hard rules fail",
+    ],
+    data: "Canonical origin, scope, expiresAt, task ID, approval user/time; permission decision and blocked rule code.",
+    api: {
+      method: "PUT",
+      path: "/v1/site-permissions/{origin}",
+      auth: "Member; explicit site access consent",
+      request: { scope: "once", taskId: "task_1" },
+      response: { origin: "https://slack.com", scope: "once", active: true },
+    },
+    rules: [
+      "Always access is not always approval",
+      "Password managers remain permanently blocked; email/storage/settings ask every time and read-only by default",
+      "Show site-automation terms notice where applicable",
+    ],
+    success:
+      "Resume permitted read/draft work; revoke immediately parks relevant workers.",
+    errors: [
+      "Blocked category, invalid origin, link >512 characters",
+      "Unknown element means park",
+      "Canary failure, backend unreachable",
+      "Site terms warning, login/CAPTCHA parks for 24h",
+    ],
+  }),
+  feature({
+    id: "browser.disconnect",
+    name: "Disconnect a browser or connection",
+    module: "Connections",
+    spec: "J10, B6.8",
+    purpose:
+      "Revoke access immediately without implying that removing a sample row revokes real credentials.",
+    frontend: [
+      "Destructive confirmation and local disconnect preview",
+      "Primary-device reassignment preview",
+    ],
+    backend: [
+      "Revoke device keys or provider tokens and close sockets",
+      "Pause affected tasks, revoke unused approvals, notify all sessions",
+      "Delete provider grants where supported and audit revocation",
+    ],
+    data: "Device or connection ID, revocation reason; revokedAt, affected task IDs and remaining connections.",
+    api: {
+      method: "DELETE",
+      path: "/v1/connections/{id}",
+      auth: "Connection owner; recent authentication if required",
+      request: {},
+      response: { revoked: true, pausedTasks: ["task_1"] },
+    },
+    rules: [
+      "Disconnect is idempotent",
+      "Extension uninstall must also end access",
+      "No secret/token material in UI",
+    ],
+    success:
+      "Show disconnected after acknowledged revocation, remove live frames and offer reconnect.",
+    errors: [
+      "Already revoked",
+      "Provider revocation delayed: report pending",
+      "Network failure: retain row until confirmed",
+    ],
+  }),
+  feature({
+    id: "files.drive",
+    name: "Google Drive file picker",
+    module: "Files",
+    spec: "J6, B6.8, B9",
+    purpose:
+      "Use only files the user explicitly chooses, without reading all of Drive or Gmail.",
+    frontend: [
+      "Allow card, sample file picker, file name/size display",
+      "Resume-fact confirmation UI",
+    ],
+    backend: [
+      "Configure minimum Drive picker OAuth scope and full-page consent return flow",
+      "Validate selected file permissions, MIME/size, scan/extract safely",
+      "Keep private artifacts and expiry; confirm account before using files",
+    ],
+    data: "Picked file ID, provider account, MIME, name, version/hash and task use; sanitized extracted facts with source references.",
+    api: {
+      method: "POST",
+      path: "/v1/files/drive/selections",
+      auth: "Member plus scoped Google grant",
+      request: { fileId: "file_1", taskId: "task_1" },
+      response: {
+        artifactId: "art_1",
+        name: "Resume.pdf",
+        status: "needs_confirmation",
+        facts: [],
+      },
+    },
+    rules: [
+      "Only selected files; no Gmail API",
+      "Connecting is not upload approval",
+      "Google test grants may expire; do not claim broad Drive access",
+    ],
+    success:
+      "Show connected account and facts for user confirmation before form preparation.",
+    errors: [
+      "User closed consent, wrong account",
+      "Grant revoked/expired, deleted file",
+      "Unsupported or oversized file, extraction failure",
+    ],
+  }),
+  feature({
+    id: "files.upload",
+    name: "Resume and document upload",
+    module: "Files",
+    spec: "B9, B6.4",
+    purpose:
+      "Preview a local file and later attach it only to an approved task.",
+    frontend: [
+      "Local PDF/TXT file metadata and size/type validation",
+      "Sample resume facts, explicit confirmation and application card",
+    ],
+    backend: [
+      "Signed private upload, malware scan and safe extraction",
+      "Store artifact hash and confirmed facts/provenance",
+      "Extension attaches approved file itself; bind exact file to commit snapshot",
+    ],
+    data: "File bytes/name/type/size/hash, task purpose; artifact ID, confirmed facts, expiry. Local previews in this build never upload bytes.",
+    api: {
+      method: "POST",
+      path: "/v1/artifacts/upload-intents",
+      auth: "Member",
+      request: { name: "Resume.pdf", mime: "application/pdf", size: 182400 },
+      response: {
+        artifactId: "art_1",
+        uploadUrl: "<short-lived private upload URL>",
+        expiresIn: 300,
+      },
+    },
+    rules: [
+      "Never invent qualifications",
+      "Uploading to a third-party site requires tap approval",
+      "Only user-selected files reach the extension",
+    ],
+    success:
+      "Validate scan/extraction then ask user to confirm facts; bind file version to approval.",
+    errors: [
+      "Unsupported MIME, >10MB, encrypted PDF",
+      "Malware or extraction failure",
+      "Stale file hash, expired upload URL",
+    ],
+  }),
+  feature({
+    id: "reader.speech",
+    name: "Reader speech and sentence timing",
+    module: "Reader",
+    spec: "J1, B5.5, B10.2",
+    purpose:
+      "Read unseen text through Gradium with sentence highlighting and pronunciation feedback.",
+    frontend: [
+      "Text/link/PDF modes, local TXT loading and file metadata",
+      "Simulated play/pause, seek, speed and per-sentence flag",
+      "No audio playback is claimed in the preview",
+    ],
+    backend: [
+      "Fetch links in isolated public reader with SSRF/size/type checks; safely extract PDFs",
+      "Send complete sentences through measured speakable-text strategy and Gradium",
+      "Stream actual audio with sentence timing and stable utterance IDs",
+      "Apply visitor 10min/day limit and balance checks before each turn",
+    ],
+    data: "Text or public URL/artifact, voice, speed; utterance IDs, original/display text, spoken text, timing, audio reference, request IDs.",
+    api: {
+      method: "POST",
+      path: "/v1/reader/sessions",
+      auth: "Anonymous visitor token or member session",
+      request: {
+        text: "A salary of ₹8.5 lakh per year.",
+        voice: "stock-calm",
+        speed: 1,
+      },
+      response: {
+        readerId: "read_1",
+        sentences: [
+          { id: "s_1", displayText: "A salary of ₹8.5 lakh per year." },
+        ],
+        transport: "<authenticated audio stream>",
+      },
+    },
+    rules: [
+      "Display text unchanged; rewriting only after category measurements",
+      "Gradium only; provider failure means text notice",
+      "Never use browser speech synthesis as an unlabelled substitute",
+    ],
+    success:
+      "Highlight according to actual playback; seek and pause audio together; flag exact utterance.",
+    errors: [
+      "Empty input, private-network URL, encrypted PDF",
+      "Provider down, credits or quota exhausted",
+      "Long input chunking, interrupted stream",
+    ],
+  }),
+  feature({
+    id: "speech.flag",
+    name: "Flag a spoken line",
+    module: "Voice",
+    spec: "B4.1, B10.3–4",
+    purpose:
+      "Give reproducible pronunciation feedback tied to the real audio and provider request.",
+    frontend: [
+      "Flag controls on Reader sentences and assistant lines",
+      "Reason selection and locally marked state",
+    ],
+    backend: [
+      "Persist feedback tied to utterance/request ID and exact settings",
+      "Store masked text/audio reference under retention policy",
+      "Aggregate into Gradium report without fabricated metrics",
+    ],
+    data: "Utterance ID, category, reason, expected spoken form, rating; feedback ID/request ID/audio reference.",
+    api: {
+      method: "POST",
+      path: "/v1/speech/feedback",
+      auth: "Visitor session with rate limit or member",
+      request: {
+        utteranceId: "utt_1",
+        reason: "pronunciation",
+        expected: "eight point five lakh",
+      },
+      response: { feedbackId: "fb_1", requestId: "gradium_request_id" },
+    },
+    rules: [
+      "No feedback submission exists without backend",
+      "Respect 14-day utterance-log retention",
+    ],
+    success: "Acknowledge saved feedback; duplicates update the same item.",
+    errors: [
+      "Utterance expired",
+      "Audio unavailable or wrong user",
+      "Duplicate or invalid category",
+    ],
+  }),
+  feature({
+    id: "jobs.workflow",
+    name: "Job discovery, evaluation and application",
+    module: "Playground",
+    spec: "B3 Demo 2, B9",
+    purpose:
+      "Find relevant jobs and prepare truthful applications using confirmed resume facts.",
+    frontend: [
+      "Intake, local resume preview, scored sample jobs and score explanations",
+      "Relocation question, form summary, tap-only approval and evidence preview",
+    ],
+    backend: [
+      "Implement intake→resume→discovery→evaluation→preparation→approval→tracking",
+      "Personal sites through extension; public research through isolated browsers",
+      "Return score reasons and unknowns; never guess legal declarations",
+      "Respect one worker per site/account, daily application caps and challenges",
+    ],
+    data: "Title/location/work mode/salary floor/experience/count, confirmed resume; listings with provenance, scores/reasons/unknowns, application status/evidence.",
+    api: {
+      method: "POST",
+      path: "/v1/tasks/job-applications",
+      auth: "Member for real sites, guest for Playground only",
+      request: {
+        title: "ML Engineer",
+        salaryFloorLpa: 8,
+        locations: ["NCR"],
+        count: 5,
+        resumeId: "art_1",
+      },
+      response: { taskId: "job_1", status: "intake", questions: [] },
+    },
+    rules: [
+      "No automated testing on real accounts",
+      "Resume upload and declaration always tap-only",
+      "Submission success needs Tier A or B+C evidence",
+    ],
+    success:
+      "Show each stage, ask unknowns, park at Submit, verify then track with evidence tier.",
+    errors: [
+      "Login/CAPTCHA parks only affected site",
+      "Salary unknown, relocation conflict",
+      "Resume revoked, application duplicate",
+      "Submitted but not confirmed",
+    ],
+  }),
+  feature({
+    id: "social.workflow",
+    name: "Four-site sharing and refusal demo",
+    module: "Playground",
+    spec: "B3 Acts 1–2, B6.1",
+    purpose:
+      "Share original posts only from genuine accounts, with individual draft review.",
+    frontend: [
+      "Four platform draft previews, edit/select/partial approval",
+      "Fake-engagement refusal sample with zero tools",
+    ],
+    backend: [
+      "Screen fake identities and repeated engagement before any tool",
+      "Confirm newest upload title from stored authorized channel fact",
+      "Run up to four distinct-site workers; park at final controls",
+      "Build one card after all ready or 90s; commit selected items sequentially and verify",
+    ],
+    data: "User-authorized source video, genuine accounts, platform-specific text, target channels, draft IDs; per-item receipt/evidence.",
+    api: {
+      method: "POST",
+      path: "/v1/tasks/share",
+      auth: "Member with connected personal browser",
+      request: {
+        sourceVideo: "<confirmed URL>",
+        sites: ["youtube.com", "linkedin.com", "x.com", "slack.com"],
+      },
+      response: { taskId: "share_1", status: "screening" },
+    },
+    rules: [
+      "Refuse fake identities and more than one engagement on same item from several accounts",
+      "Unticked drafts kept 30min",
+      "All rehearsals use stand-ins or restricted visibility; real posts never from automated tests",
+    ],
+    success:
+      "Show 4 drafts, per-site blockers, partial results and only Tier A links.",
+    errors: [
+      "Level 4 refusal",
+      "Site session challenged",
+      "One draft failed, page changed",
+      "Pause after first commit",
+    ],
+  }),
+  feature({
+    id: "research.workflow",
+    name: "Parallel public research",
+    module: "Playground",
+    spec: "B3 Demo 3, B6.2",
+    purpose: "Compare public sources without exposing personal-browser logins.",
+    frontend: [
+      "Sample TTS pricing table and source/assumption labels",
+      "Three-browser research plan preview",
+    ],
+    backend: [
+      "Run isolated logged-out browsers with public-network-only access",
+      "Extract cited values/currency/units and timestamp",
+      "Keep tainted reports from adding sites/recipients to personal plan",
+    ],
+    data: "Research question, public sources, units/currency; comparison rows, source URLs, retrievedAt, caveats. Sample prices are illustrative, not purchasing advice.",
+    api: {
+      method: "POST",
+      path: "/v1/tasks/research",
+      auth: "Guest quota or member",
+      request: { query: "Compare TTS pricing per million characters" },
+      response: { taskId: "research_1", mode: "isolated-public" },
+    },
+    rules: [
+      "Personal Chrome never used for open-ended research",
+      "No private-network/localhost access",
+    ],
+    success:
+      "Show cited findings, numbers and uncertainty; retain original text for speech.",
+    errors: [
+      "Page inaccessible or robots/challenge",
+      "Incomparable pricing units",
+      "Source changed, timeout or insufficient evidence",
+    ],
+  }),
+  feature({
+    id: "watchers.manage",
+    name: "PR watchers and notifications",
+    module: "Watchers",
+    spec: "J7, B7.9",
+    purpose:
+      "Notify when a PR merges, even while the personal browser is offline.",
+    frontend: [
+      "Create/edit sample watcher, pause, renew, stop and event preview",
+      "Duplicate detection, cap and expired/failed/closed states",
+    ],
+    backend: [
+      "GitHub authorized fixed checks on timer, no model; at most once/minute",
+      "10 active/user, 7-day expiry, disable after 5 consecutive failures",
+      "Deduplicate repeated watches and notifications; recheck grants every run",
+      "Notify only; no automated follow-up actions",
+    ],
+    data: "Provider/repo/PR number, condition, connection, expiry/failure count/last observation; watcher ID and last notified event.",
+    api: {
+      method: "POST",
+      path: "/v1/watchers",
+      auth: "Member with GitHub grant",
+      request: {
+        repository: "acme/voice-kit",
+        pullRequest: 142,
+        event: "merged",
+        notify: "telegram",
+      },
+      response: { watcherId: "watch_1", status: "active", expiresInDays: 7 },
+    },
+    rules: [
+      "Closed unmerged ends watch early",
+      "Recreating same watch returns existing ID",
+      "Never acts when event fires",
+    ],
+    success:
+      "Acknowledge only after persistence; show next check, expiry, notice and renewal.",
+    errors: [
+      "No GitHub grant, private repo forbidden",
+      "10-watch cap, duplicate",
+      "5 consecutive provider failures, expiry or PR closed",
+    ],
+  }),
+  feature({
+    id: "connections.github",
+    name: "Connect GitHub",
+    module: "Connections",
+    spec: "B6.8, B7.9",
+    purpose:
+      "Read authorized pull requests for PR nudges and offline watchers.",
+    frontend: ["Connection card, allowed-data explanation and account preview"],
+    backend: [
+      "OAuth with minimum repository read permissions and state validation",
+      "Encrypt tokens outside DB key storage; renew/revoke grants",
+      "Check repo access for every watcher and task",
+    ],
+    data: "OAuth code/state; account, granted scope/repositories, last use and status. No provider token exposed.",
+    api: {
+      method: "GET",
+      path: "/v1/connections/github/start",
+      auth: "Member",
+      request: { returnTo: "/connections" },
+      response: { redirectUrl: "<provider authorization URL>" },
+    },
+    rules: [
+      "Access is not permission to post or change code",
+      "No write permissions for watchers",
+    ],
+    success:
+      "Full-page consent, callback validation and return to preserved task.",
+    errors: [
+      "Consent closed, wrong account",
+      "Token expired/revoked",
+      "Repository access removed",
+    ],
+  }),
+  feature({
+    id: "connections.telegram",
+    name: "Link Telegram and phone approvals",
+    module: "Connections",
+    spec: "J4, B7.8",
+    purpose:
+      "Deliver compact task results and verified review links to the linked person.",
+    frontend: [
+      "Explicitly non-redeemable demo linking code",
+      "Sample notification and approval deep-link UI",
+    ],
+    backend: [
+      "Run own official-API bot and issue expiring one-time account-link code",
+      "Reject group chats and unlinked identities; authenticate signed Web App data ≤5min",
+      "Handle pause/cancel by code and prevent same-channel start/approve",
+      "Send privacy-safe messages; Gradium voice notes begin ONE FOR ALL here",
+    ],
+    data: "One-time code, chat/user ID stored server-side, signed init data; link status, notification ID and review URL on own domain.",
+    api: {
+      method: "POST",
+      path: "/v1/connections/telegram/link-codes",
+      auth: "Member",
+      request: {},
+      response: {
+        code: "<one-time>",
+        expiresIn: 300,
+        botUsername: "<configured bot>",
+      },
+    },
+    rules: [
+      "No sensitive details in push text",
+      "Task started from Telegram cannot be approved there",
+      "First decision on phone/web wins",
+    ],
+    success:
+      "Show linked only after bot confirms; Review opens authenticated approval on ONE FOR ALL domain.",
+    errors: [
+      "Expired/reused code, wrong Telegram user",
+      "Stale signed login data",
+      "Approval already decided, bot blocked",
+    ],
+  }),
+  feature({
+    id: "history.list",
+    name: "Task history and evidence",
+    module: "History",
+    spec: "B4.1, B7.5–6",
+    purpose:
+      "Revisit what happened and distinguish verified from merely submitted or unknown.",
+    frontend: [
+      "Sample searchable/filterable/sortable/paginated history",
+      "Task detail, illustrative ledger and download of sample summary",
+    ],
+    backend: [
+      "Owner-scoped cursor pagination and task/evidence retrieval",
+      "Store idempotent side-effect ledger and immutable approval audit",
+      "Private artifact access with 7-day screenshot retention",
+    ],
+    data: "Task ID, goal, timestamps, state, attempt, tier, created item ID/link, gate reason and snapshot hash; cursor/total.",
+    api: {
+      method: "GET",
+      path: "/v1/tasks",
+      auth: "Member; strict owner scoping",
+      request: { status: "completed", cursor: null, limit: 10 },
+      response: { items: [], nextCursor: null, total: 0 },
+    },
+    rules: [
+      "intent never blindly retried; inspect first",
+      "D evidence never counts; Tier A links only",
+      "Submitted, not yet confirmed is distinct from verified",
+    ],
+    success:
+      "Show accurate server statuses, empty/error states and chronological audit.",
+    errors: [
+      "Unauthorized task ID",
+      "Expired screenshot",
+      "Cursor invalid or disconnected",
+    ],
+  }),
+  feature({
+    id: "settings.save",
+    name: "Preferences, profile facts and budgets",
+    module: "Settings",
+    spec: "B5.4, B5.7, B6.7, B11.1–2",
+    purpose:
+      "Use confirmed facts and personal voice preferences without repeated questions.",
+    frontend: [
+      "Local non-sensitive preference storage with explicit save",
+      "Editable sample facts, language, voice, concerns, push-to-talk and usage preview",
+    ],
+    backend: [
+      "Persist versioned preferences and fact provenance",
+      "Enforce member/owner capabilities, rate caps, invites and global Reader-only kill switch",
+      "Permanently block password managers; ask-every-time sensitive categories",
+    ],
+    data: "Display name, timezone, stock voice, language profile, concern mode, confirmed facts and version; limits, usage and policy flags.",
+    api: {
+      method: "PATCH",
+      path: "/v1/me/preferences",
+      auth: "Member; optimistic version check",
+      request: { version: 1, languageProfile: "hi-en", concerns: "important" },
+      response: { version: 2, saved: true },
+    },
+    rules: [
+      "No owner role assignment from client",
+      "Facts cannot be silently overwritten by outside content",
+      "No always-allow commit preference",
+    ],
+    success:
+      "Acknowledge server save; preserve user edits on failure and resolve version conflicts.",
+    errors: [
+      "Invalid language/voice for role",
+      "Version conflict, budget exhausted",
+      "Owner-only setting denied",
+    ],
+  }),
+  feature({
+    id: "privacy.delete",
+    name: "Delete my data",
+    module: "Privacy",
+    spec: "J10, B11.3",
+    purpose:
+      "Erase account data and voice clone within 24 hours with an auditable request.",
+    frontend: [
+      "Privacy notice, retention table and explicit confirmation",
+      "Separate local-demo reset that makes no server-deletion claim",
+    ],
+    backend: [
+      "Reauthenticate, revoke sessions/device keys/tokens and stop tasks",
+      "Erase files, history, checkpoints, traces, profile facts and provider voice clone",
+      "Track deletion job, completion and exceptions within 24h",
+      "Retain only legally necessary minimal audit with clear disclosure",
+    ],
+    data: "Authenticated deletion intent and confirmation; deletion request ID, status, requestedAt and deadline. No database schema is implemented here.",
+    api: {
+      method: "POST",
+      path: "/v1/me/deletion-requests",
+      auth: "Member with recent authentication",
+      request: { confirmation: "DELETE" },
+      response: { requestId: "del_1", status: "pending", deadlineHours: 24 },
+    },
+    rules: [
+      "Raw mic audio not stored; utterance logs 14d; screenshots 7d; page readings hashes after task",
+      "Provider deletion must be confirmed",
+      "Frontend reset is not account deletion",
+    ],
+    success:
+      "Show scheduled request, revoke access and provide a safe status receipt.",
+    errors: [
+      "Recent authentication required",
+      "Provider deletion delayed",
+      "Request already pending, legal hold must be disclosed",
+    ],
+  }),
+  feature({
+    id: "voice.clone",
+    name: "Owner voice enrolment and consent",
+    module: "Owner lab",
+    spec: "B5.6",
+    purpose:
+      "Create only an owner's consented voice with retained consent evidence.",
+    frontend: [
+      "Three-take selection, 20–30s script and consent phrase UI",
+      "Owner presentation gating, countdown preview and no mic recording",
+    ],
+    backend: [
+      "Check owner role, capture three actual takes with noise processing off",
+      "Issue three random words plus today's date, validate spoken within 30s",
+      "Verify consent transcription and send selected audio to Gradium",
+      "Keep voice ID only server-side; delete provider clone with account",
+    ],
+    data: "Owner ID, recording refs/durations, chosen take, challenge words/date/issuedAt/consent result; voice profile status without provider ID.",
+    api: {
+      method: "POST",
+      path: "/v1/voice-profiles/enrolments",
+      auth: "Owner only, recent authentication",
+      request: { selectedTake: "take_2", consentChallengeId: "consent_1" },
+      response: { enrolmentId: "enroll_1", status: "validating" },
+    },
+    rules: [
+      "No member/visitor clones in iteration 1",
+      "Real audio and consent required; sample phrase is not proof",
+      "Provider voice ID never reaches client",
+    ],
+    success:
+      "Show pending validation then usable profile or specific retake request.",
+    errors: [
+      "Not owner, consent mismatch or >30s",
+      "Audio <20s or >30s, poor noise",
+      "Provider voice quota, consent/provider deletion failure",
+    ],
+  }),
+  feature({
+    id: "speech.harness",
+    name: "Speech harness and Gradium feedback",
+    module: "Owner lab",
+    spec: "B5.5, B10.3–4, B15",
+    purpose:
+      "Measure speech reliability without fabricating benchmark results.",
+    frontend: [
+      "Category/strategy/seed controls, illustrative case rows and blind-rating UI",
+      "Exportable feedback template marked not measured",
+    ],
+    backend: [
+      "Run raw rewrite-off/on/custom strategies ×3 seeds, whole vs pieces",
+      "Score hard substrings using two non-Gradium transcribers and name/length checks",
+      "Cache by text/voice/settings hash; nightly runner; 100-line blind 1–5 ratings",
+      "Generate feedback with real request ID, text, settings and audio",
+    ],
+    data: "Case ID/category, expected form, strategy/seed, provider request ID, audio ref, independent scores and blind rating.",
+    api: {
+      method: "POST",
+      path: "/v1/speech-tests/runs",
+      auth: "Owner",
+      request: {
+        categories: ["currency", "names"],
+        strategies: ["raw-off", "raw-on", "custom"],
+        seeds: [1, 2, 3],
+      },
+      response: { runId: "run_1", status: "queued" },
+    },
+    rules: [
+      "Never grade with Gradium's own transcription",
+      "No real success percentages or latency claims from preview",
+      "Report provider dictionary gaps with reproducible evidence",
+    ],
+    success:
+      "Stream measured rows and build feedback only from completed runs.",
+    errors: [
+      "Quota/provider errors",
+      "Missing reference pronunciation or audio",
+      "Partial run and invalid comparison",
+    ],
+  }),
+  feature({
+    id: "stretch.sheets",
+    name: "Picked Google Sheets and Docs edits",
+    module: "Stretch",
+    spec: "J6, B3 Demo 4, B14.2, E1.13",
+    purpose:
+      "Edit a selected file via API, then show the result in personal Chrome.",
+    frontend: [
+      "Expense-sheet before/after preview and total-row summary",
+      "Explicit stretch badge and exact-request handoff",
+    ],
+    backend: [
+      "Trial whether picker grant permits Sheets/Docs edits",
+      "Build approval from exact API request, version and cells",
+      "Apply only approved edit; verify read-back and open selected document",
+    ],
+    data: "Picked file/version, range, existing values, proposed mutations; revision ID and read-back evidence.",
+    api: {
+      method: "POST",
+      path: "/v1/document-edits",
+      auth: "Member, selected-file grant and tap approval",
+      request: {
+        fileId: "sheet_1",
+        range: "A8:B8",
+        values: [["Total", 28450]],
+        rename: "November",
+      },
+      response: { approvalId: "ap_sheet_1", status: "parked" },
+    },
+    rules: [
+      "Stretch only after must-haves",
+      "No entire-Drive permission",
+      "Version conflict invalidates approval",
+    ],
+    success:
+      "After approved commit, show read-back totals and open selected file.",
+    errors: [
+      "Scope insufficient: defer feature",
+      "File changed, access revoked",
+      "Partial edit requires accurate report",
+    ],
+  }),
+  feature({
+    id: "stretch.desktop",
+    name: "Desktop Companion and remote input",
+    module: "Stretch",
+    spec: "B7.7, B14.2, E1.14",
+    purpose:
+      "Optionally act in explicitly enabled desktop apps/folders through an owner-only companion.",
+    frontend: [
+      "Disabled-by-default owner Companion card and permissions explanation",
+      "Remote-input stretch status; no OS control or files accessed",
+    ],
+    backend: [
+      "Trial OpenClaw Windows tool hook and authenticated transport",
+      "Gate every desktop action; park every file mutation",
+      "Allowlist apps/folders and keep view-only without active task",
+      "Phone click control requires a separately secured, consented implementation",
+    ],
+    data: "Paired device/app/folder allowlist, task, exact file mutations and hashes; gate decision and verification.",
+    api: {
+      method: "POST",
+      path: "/v1/companions/pairing",
+      auth: "Owner only and explicit local consent",
+      request: { platform: "windows", mode: "view-only" },
+      response: { pairingId: "comp_1", status: "awaiting-local-consent" },
+    },
+    rules: [
+      "Stretch, not part of functional frontend",
+      "No shareable gateway for strangers",
+      "All changes require approval",
+    ],
+    success: "Only after trial and explicit consent show actual paired status.",
+    errors: [
+      "Windows support/transport unproven",
+      "Out-of-allowlist app/file",
+      "Offline companion or gate bypass: stop",
+    ],
+  }),
+  feature({
+    id: "dictation.preview",
+    name: "Caps Lock dictation — frontend preview",
+    module: "Voice",
+    spec: "Dictation prompt §§3–10; frontend-only scope override",
+    purpose:
+      "Review consent, toggle states, recovery and insertion outcomes without any native hook, microphone, STT or external app changes.",
+    frontend: [
+      "Consent-gated Caps Lock handling while the website is focused",
+      "Nonmodal indicator, simulated levels, status, retry and recovery UI",
+      "Typed abortable mock adapters and original/current sandbox target policies",
+      "Preview clipboard fallback and explicitly user-clicked browser copy",
+    ],
+    backend: [
+      "NOT IMPLEMENTED: global native keyboard capture/suppression, background host and single instance",
+      "NOT IMPLEMENTED: reuse real microphone/STT/insertion services through DictationServices",
+      "NOT IMPLEMENTED: native overlay, private audio files, clipboard snapshot/restore and desktop tray",
+      "NOT IMPLEMENTED: native kill switches, crash breaker, Windows E2E and latency/soak gates",
+    ],
+    data: "Session-correlated UI events, opaque artifact references, target policy, consent version and phase progress. The browser adapter uses only mock recovery tokens and demo text; no audio or non-trigger keystrokes.",
+    api: {
+      transport: "local-adapter",
+      method: "Local adapter contract (not implemented)",
+      path: "src/lib/dictation/contracts.ts — DictationServices",
+      auth: "Explicit preview consent now; native identity and consent must be implemented separately",
+      request: {
+        event: "TOGGLE",
+        binding: { trigger: "CapsLock" },
+        mode: "simulation",
+      },
+      response: {
+        phase: "LISTENING",
+        nativeCapture: false,
+        externalInsertion: false,
+      },
+    },
+    rules: [
+      "Never describe browser simulation as working system-wide dictation",
+      "No new HTTP endpoints or real voice requests",
+      "Keep failed or interrupted preview data until confirmed sandbox insertion, expiry or explicit discard",
+      "Only an explicit Copy text click writes the browser clipboard",
+    ],
+    success:
+      "The UI completes the simulated flow in an in-app target. Native behavior remains not implemented.",
+    errors: [
+      "Simulated mic/connection/keyboard availability errors",
+      "Closed, elevated and password targets",
+      "Stale results, cancellation and interrupted preview recovery",
+    ],
+  }),
+];
+export const featureById = Object.fromEntries(
+  features.map((f) => [f.id, f]),
+) as Record<string, Feature>;

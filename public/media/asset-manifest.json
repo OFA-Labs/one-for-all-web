@@ -1,0 +1,65 @@
+{
+  "source": "Screen Recording 2026-11-15 160400.mp4",
+  "source_dimensions": [
+    1194,
+    1152
+  ],
+  "source_duration_seconds": 12.13,
+  "source_fps": 30,
+  "source_effective_cadence": "Variable screen-recording cadence: first seconds about 7.5 distinct states/sec; selected t3-7 about 15-16 distinct states/sec. In a nine-second sample, 270 container frames reduced to 127 content frames.",
+  "source_segment_seconds": [
+    3.0,
+    7.0
+  ],
+  "output_fps": 60,
+  "speed_multiplier": 1.25,
+  "loop_duration_seconds": 6.166666666666667,
+  "output_frames": 370,
+  "interpolation": "mpdecimate preserving timestamps, setpts/1.25, minterpolate MCI with adaptive overlapped blocks, bidirectional estimation, variable-size blocks; performed at 1152-square before upscaling",
+  "loop": "Forward/reverse with duplicated endpoints removed, no repeated hold at either turn",
+  "cleaning": "Corner control masks; square crop x42/y0/1152; restrained denoise; Lanczos upscale; mild sharpening",
+  "audio": "No audio streams; silent visual asset",
+  "native_4k": false,
+  "outputs": [
+    {
+      "file": "one-for-all-4k.mp4",
+      "dimensions": [
+        3840,
+        2160
+      ],
+      "fps": 60,
+      "bytes": 21109289
+    },
+    {
+      "file": "one-for-all-1080p.mp4",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "fps": 60,
+      "bytes": 7232503
+    },
+    {
+      "file": "one-for-all-poster.webp",
+      "dimensions": [
+        2160,
+        2160
+      ],
+      "bytes": 250970
+    }
+  ],
+  "tool": {
+    "imageio_ffmpeg": "0.8.1",
+    "ffmpeg": "9.0.2 bundled Windows executable"
+  },
+  "verification": {
+    "decoded_frames": 370,
+    "duplicate_adjacent_frames": 0,
+    "near_duplicate_pairs_below_0_1": 0,
+    "frame_delta_64px_grayscale_min": 1.262939453125,
+    "frame_delta_64px_grayscale_median": 2.633056640625,
+    "frame_delta_64px_grayscale_max": 9.094482421875,
+    "loop_boundary_delta": 8.092529296875,
+    "full_decode_errors": 0
+  }
+}

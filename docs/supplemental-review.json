@@ -1,0 +1,49 @@
+[
+  {
+    "name": "four-site approval desktop",
+    "overflow": false,
+    "violations": []
+  },
+  {
+    "name": "four-site approval phone",
+    "overflow": false,
+    "violations": []
+  },
+  {
+    "name": "integration dialog phone",
+    "overflow": false,
+    "violations": []
+  },
+  {
+    "name": "partial approval",
+    "selected": 1,
+    "passed": true
+  },
+  {
+    "name": "history to new task navigation",
+    "passed": true
+  },
+  {
+    "name": "owner lab phone",
+    "overflow": false,
+    "violations": []
+  },
+  {
+    "name": "owner lab desktop",
+    "overflow": false,
+    "violations": []
+  },
+  {
+    "name": "explicit local preference save",
+    "passed": true
+  },
+  {
+    "name": "reset clears local preference",
+    "passed": true
+  },
+  {
+    "name": "reader landscape",
+    "overflow": false,
+    "violations": []
+  }
+]

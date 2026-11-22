@@ -1,0 +1,27 @@
+{
+  "note": "Local Chromium sample; not a guarantee for other hardware or displays",
+  "results": [
+    {
+      "viewportWidth": 1440,
+      "source": "http://127.0.0.1:3000/media/one-for-all-4k.mp4?v=smooth60-v2",
+      "width": 3840,
+      "height": 2160,
+      "duration": 6.166667,
+      "playbackRate": 1,
+      "totalFrames": 150,
+      "droppedFrames": 0,
+      "observedPresentationFps": 58.8
+    },
+    {
+      "viewportWidth": 375,
+      "source": "http://127.0.0.1:3000/media/one-for-all-1080p.mp4?v=smooth60-v2",
+      "width": 1920,
+      "height": 1080,
+      "duration": 6.166667,
+      "playbackRate": 1,
+      "totalFrames": 150,
+      "droppedFrames": 0,
+      "observedPresentationFps": 57.2
+    }
+  ]
+}

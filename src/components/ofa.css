@@ -1,0 +1,404 @@
+.ofa-hero {
+  position: relative;
+  isolation: isolate;
+}
+/* Keep the hero copy legible over the footage without blanketing the video
+   in a light haze. The shadow hugs the glyphs instead of the whole pane. */
+.ofa-hero-nav,
+.ofa-hero-kicker {
+  text-shadow: var(--t-hero-shadow);
+}
+.home-hero-video {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center;
+}
+.home-hero-video > video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 350ms ease;
+}
+.home-hero-video[data-ready="true"] > video {
+  opacity: 1;
+}
+.ofa-hero-center {
+  position: relative;
+  z-index: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-video > video {
+    transition: none;
+  }
+}
+.ofa-hero-nav {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 16px;
+  width: min(760px, calc(100% - 32px));
+  color: var(--t-hero-text);
+  font-size: 12px;
+  z-index: 1;
+}
+.ofa-hero-nav a {
+  padding: 6px 9px;
+  border-radius: 8px;
+}
+.ofa-hero-nav a:hover,
+.ofa-hero-nav a:focus-visible {
+  color: var(--ink);
+  background: var(--t-active);
+}
+.ofa-hero-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.ofa-hero-kicker {
+  margin-bottom: 26px;
+  color: var(--t-hero-text);
+  font-size: 11px;
+  letter-spacing: 3px;
+}
+.ofa-hero-copy {
+  margin-top: 48px;
+  color: var(--t-hero-text);
+  font-size: 13px;
+  text-align: center;
+}
+.ofa-enter-workspace {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 26px;
+  padding: 11px 18px;
+  border: 1px solid var(--t-border);
+  border-radius: 10px;
+  background: var(--t-accent);
+  color: var(--t-accent-text);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.ofa-enter-workspace:hover {
+  background: var(--t-accent-hover);
+  color: var(--t-accent-text);
+}
+.workspace-visible .ofa-enter-workspace {
+  visibility: hidden;
+}
+.ofa-workspace {
+  scroll-margin-top: 0;
+}
+.ofa-workspace-inner {
+  min-width: 0;
+  max-width: 1120px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  margin-inline: auto;
+}
+.ofa-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+.ofa-heading h1 {
+  font-size: 32px;
+  letter-spacing: 1px;
+  line-height: 1.4;
+}
+.ofa-heading p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.ofa-heading > button {
+  flex-shrink: 0;
+}
+.ofa-modes > .ofa-mode-switch {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  height: auto;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 30px;
+  border: 1px solid var(--t-border);
+  border-radius: 10px;
+  background: var(--t-card);
+}
+.ofa-mode-switch > [data-slot="tabs-trigger"] {
+  min-height: 44px;
+  min-width: 145px;
+  padding: 11px 20px;
+  color: var(--muted);
+  background: transparent;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: none;
+}
+.ofa-mode-switch > [data-slot="tabs-trigger"][data-state="active"] {
+  background: var(--t-accent);
+  color: var(--t-accent-text);
+}
+.ofa-mode-panel[hidden],
+.ofa-mode-panel[data-state="inactive"] {
+  display: none;
+}
+.ofa-assist-toolbar,
+.ofa-reader-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.ofa-assist-toolbar h2,
+.ofa-reader-heading h2 {
+  font-size: 18px;
+  letter-spacing: -0.4px;
+}
+.ofa-assist-toolbar > button {
+  min-height: 36px;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.ofa-assistant .ofa-assist-idle {
+  grid-template-columns: minmax(0, 1fr);
+}
+.ofa-assistant .voice-topline {
+  padding-bottom: 15px;
+}
+.ofa-assistant .composer {
+  min-height: 135px;
+}
+.ofa-assistant .composer textarea {
+  min-height: 65px;
+}
+.ofa-assistant .starter-prompt {
+  padding-block: 18px;
+}
+.ofa-assistant .recent-section {
+  margin-top: 30px;
+}
+.ofa-assistant .recent-section h2,
+.ofa-assistant .starter-section h2 {
+  font-size: 14px;
+}
+.ofa-reader .reader-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+.ofa-reader .reader-toolbar {
+  flex-wrap: wrap;
+  gap: 16px 24px;
+}
+.ofa-reader .reader-toolbar > label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.ofa-reader .reader-toolbar select {
+  color: var(--ink);
+  min-width: 84px;
+}
+.ofa-reader .reader-editor > .text-button {
+  margin-top: 14px;
+}
+.ofa-reader .notice {
+  font-size: 11px;
+}
+[data-slot="dialog-overlay"].ofa-orb-overlay {
+  z-index: 100;
+  background: var(--t-overlay);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+[data-slot="dialog-content"].ofa-orb-dialog {
+  z-index: 110;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: min(520px, calc(100vw - 32px));
+  max-width: min(520px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: 30px 32px 22px;
+  border: 1px solid var(--t-border-strong);
+  border-radius: 20px;
+  background: var(--t-canvas);
+  box-shadow: 0 24px 100px var(--t-shadow);
+}
+.ofa-orb-dialog > [data-slot="dialog-close"] {
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  height: 36px;
+  width: 36px;
+}
+.ofa-session-heading {
+  align-items: center;
+  text-align: center;
+  margin-bottom: 17px;
+}
+.ofa-session-heading [data-slot="dialog-title"] {
+  font-size: 20px;
+  line-height: 1.5;
+  letter-spacing: 1px;
+}
+.ofa-session-heading [data-slot="dialog-description"] {
+  color: var(--muted);
+  font-size: 12px;
+}
+.ofa-session-orb {
+  display: grid;
+  place-items: center;
+  height: 215px;
+  width: 215px;
+  flex-shrink: 0;
+  padding: 22px;
+  margin: 2px 0 16px;
+  overflow: hidden;
+  border: 1px solid #303030;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, #0d0d0d, #000 72%);
+  box-shadow:
+    inset 0 0 0 1px #ffffff12,
+    0 18px 55px #00000080;
+}
+.ofa-session-orb .voice-video-stage.compact {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 50%;
+}
+.ofa-session-orb .voice-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* If the orb animation ever fails, keep the fallback message readable inside
+   the disc instead of clipping it against the circular crop. */
+.ofa-session-orb .voice-video-stage:has(.video-error) {
+  overflow: visible;
+}
+.ofa-session-orb .video-error {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  border-radius: 50%;
+  background: #000000e6;
+  color: #ffffff;
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+}
+.ofa-session-content {
+  text-align: center;
+  max-width: 100%;
+  margin-bottom: 22px;
+}
+.ofa-session-content p {
+  font-size: 14px;
+  line-height: 1.8;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+.ofa-session-content .ofa-reading-sentence {
+  font-size: 16px;
+}
+.ofa-session-content > span {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 9px;
+}
+.ofa-session-stop {
+  width: 130px;
+  min-height: 42px;
+}
+.ofa-session-caption {
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 13px;
+}
+.ofa-orb-dialog .ofa-session-workspace {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 11px;
+  margin-top: 22px;
+}
+@media (max-width: 700px) {
+  .ofa-heading {
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .ofa-heading h1 {
+    font-size: 27px;
+  }
+  .ofa-heading p {
+    font-size: 12px;
+    max-width: 25ch;
+  }
+  .ofa-modes > .ofa-mode-switch {
+    width: 100%;
+    flex-wrap: nowrap;
+    margin-bottom: 24px;
+  }
+  .ofa-mode-switch > [data-slot="tabs-trigger"] {
+    min-width: 0;
+    flex: 1;
+    font-size: 12px;
+    padding-inline: 10px;
+  }
+  .ofa-assist-toolbar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .ofa-assist-toolbar h2,
+  .ofa-reader-heading h2 {
+    font-size: 16px;
+  }
+  .ofa-reader .reader-toolbar {
+    align-items: flex-start;
+    gap: 15px;
+  }
+  .ofa-reader .reader-toolbar > .button-row {
+    width: 100%;
+  }
+  .ofa-reader .reader-toolbar > label {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  [data-slot="dialog-content"].ofa-orb-dialog {
+    padding: 26px 22px 18px;
+  }
+  .ofa-session-content .ofa-reading-sentence {
+    font-size: 14px;
+  }
+}
