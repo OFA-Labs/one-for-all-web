@@ -45,7 +45,7 @@ const pageHasFocus = () =>
   document.visibilityState !== "hidden" && document.hasFocus();
 const serverHasFocus = () => false;
 
-export function DictationPreferences() {
+function DictationPreferences() {
   const api = useDictation();
   const { state, send, shortcut } = api;
   const focused = useSyncExternalStore(

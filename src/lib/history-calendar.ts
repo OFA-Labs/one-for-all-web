@@ -1,7 +1,7 @@
 /** Calendar arithmetic uses UTC civil dates; display/event grouping uses the
  * currently selected display time zone. */
 export type CalendarView = "day" | "week" | "month" | "year";
-export const CALENDAR_TIMEZONE = "Asia/Kolkata";
+const CALENDAR_TIMEZONE = "Asia/Kolkata";
 
 export const TIME_ZONE_OPTIONS = [
   { value: "Asia/Kolkata", label: "India Standard Time (GMT+5:30)" },
@@ -17,10 +17,10 @@ export function setCalendarTimeZone(value: string) {
 export function getCalendarTimeZone() {
   return activeTimeZone;
 }
-export function civilDate(date: Date): string {
+function civilDate(date: Date): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
 }
-export function parseCivilDate(value: string): Date {
+function parseCivilDate(value: string): Date {
   return new Date(`${value}T00:00:00.000Z`);
 }
 export function getTodayInKolkata(now: Date = new Date()): string {

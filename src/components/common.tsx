@@ -1,12 +1,9 @@
 "use client";
 import {
-  ArrowUpRight,
-  Check,
   ChevronRight,
   CircleHelp,
   Flag,
   Info,
-  LoaderCircle,
   ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
@@ -23,7 +20,6 @@ import {
 import { useApp } from "./provider";
 import { cn } from "@/lib/utils";
 import type { OrbState } from "@/lib/demo";
-import { Button } from "./ui/button";
 export function PageTitle({
   title,
   description,
@@ -131,7 +127,7 @@ export function FlagButton({ id, label }: { id: string; label?: string }) {
   );
 }
 // 20% faster than the source clip, applied before the first frame is shown.
-export const ORB_PLAYBACK_RATE = 1.2;
+const ORB_PLAYBACK_RATE = 1.2;
 export function VoiceVideo({
   state = "Idle",
   compact = false,
@@ -278,58 +274,5 @@ export function TrustLine() {
       <ShieldCheck size={15} aria-hidden="true" />
       <span>Your browser. Your accounts. Your final say.</span>
     </div>
-  );
-}
-export function Busy({ label = "Preparing the preview…" }: { label?: string }) {
-  return (
-    <div className="busy" role="status">
-      <LoaderCircle className="spin" size={22} aria-hidden="true" />
-      {label}
-    </div>
-  );
-}
-export function FeatureTile({
-  icon: Icon,
-  title,
-  description,
-  href,
-}: {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-  href: string;
-}) {
-  return (
-    <Link className="feature-tile" href={href}>
-      <Icon size={22} aria-hidden="true" />
-      <div>
-        <h3>{title}</h3>
-        <p>{description}</p>
-      </div>
-      <ArrowUpRight size={16} aria-hidden="true" />
-    </Link>
-  );
-}
-export function LocalSaved() {
-  return (
-    <span className="small muted">
-      <Check size={14} className="inline" aria-hidden="true" /> Local preview
-      only
-    </span>
-  );
-}
-export function ReviewFirst() {
-  return (
-    <Notice>
-      All activity on this page is sample data. Review integration details
-      before connecting real accounts.
-    </Notice>
-  );
-}
-export function BackHome() {
-  return (
-    <Button asChild variant="outline">
-      <Link href="/">Back to assistant</Link>
-    </Button>
   );
 }

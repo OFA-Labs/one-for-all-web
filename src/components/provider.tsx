@@ -33,7 +33,7 @@ import {
   type TaskAction,
 } from "@/lib/demo";
 
-export type AppNotification = {
+type AppNotification = {
   id: string;
   title: string;
   detail: string;

@@ -1,7 +1,6 @@
 /** One clock drives the supplied heart footage, its pump and startup shake. */
 export const REACTOR_STARTUP_MS = 3500;
 export const REACTOR_SHUTDOWN_MS = 4200;
-export const REACTOR_PUMP_MS = 235;
 
 // Play the supplied introduction once, then repeat its three glowing beats.
 const LOOP_START_MS = 5500;

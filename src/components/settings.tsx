@@ -10,14 +10,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { IntegrationButton, Notice, PageTitle, Pill } from "./common";
 import { DictationWorkspace } from "./dictation/workspace";
 
-export const SETTINGS_TABS = [
+const SETTINGS_TABS = [
   "personal",
   "voice",
   "dictation",
   "safety",
   "usage",
 ] as const;
-export type SettingsTab = (typeof SETTINGS_TABS)[number];
+type SettingsTab = (typeof SETTINGS_TABS)[number];
 const initial = {
   name: "Jai",
   language: "en",

@@ -199,7 +199,7 @@ function stopForProcessing(
     notice,
   });
 }
-export function sanitizeSettings(
+function sanitizeSettings(
   patch: Partial<DictationSettings>,
 ): DictationSettings {
   return {

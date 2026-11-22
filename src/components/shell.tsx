@@ -83,7 +83,7 @@ const nav: NavItem[] = [
 // and stays still and faded while it is off. e-brain just uses its own picture.
 /** The eye only moves while a watcher notice is unseen — once every notice is
  * marked seen it settles on a still frame, so it reads as "check this out". */
-export function WatcherEye({ size = 19 }: { size?: number }) {
+function WatcherEye({ size = 19 }: { size?: number }) {
   const { unseenCount } = useApp();
   const videoRef = useRef<HTMLVideoElement>(null);
   const moving = unseenCount > 0;
