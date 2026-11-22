@@ -17,7 +17,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { useApp } from "./provider";
+import { useApp } from "@/app/providers/app-provider";
 import { cn } from "@/lib/utils";
 import type { OrbState } from "@/lib/demo";
 export function PageTitle({

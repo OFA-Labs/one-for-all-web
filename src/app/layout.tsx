@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import "@fontsource-variable/manrope";
 import "@fontsource-variable/dm-sans";
-import "./globals.css";
-import { AppProvider } from "@/components/provider";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Shell } from "@/components/shell";
-import { DictationProvider } from "@/components/dictation/provider";
+import "@/styles/globals.css";
+import { AppProvider } from "@/app/providers/app-provider";
+import { ThemeProvider } from "@/app/providers/theme-provider";
+import { Shell } from "@/components/layout/shell";
+// Deep import on purpose: the settings barrel would pull the whole Settings
+// page (and its CSS) into the root layout bundle for every route.
+import { DictationProvider } from "@/features/settings/components/dictation/dictation-provider";
 export const metadata: Metadata = {
   title: {
     default: "ONE FOR ALL — A little less busywork",

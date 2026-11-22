@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { HistoryPage } from "@/components/management";
+import { HistoryCalendar } from "@/features/history";
 export const metadata: Metadata = { title: "History" };
 export default function Page() {
-  return <HistoryPage />;
+  return <HistoryCalendar />;
 }

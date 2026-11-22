@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SettingsPage } from "@/components/settings";
+import { SettingsPage } from "@/features/settings";
 export const metadata: Metadata = { title: "Settings" };
 export default async function Page({
   searchParams,

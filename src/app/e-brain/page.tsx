@@ -1,5 +1,5 @@
-// Intentionally blank. "e-brain" is a placeholder top-level destination;
-// the shared shell (navigation, header and footer) still wraps this route.
+import { EBrain } from "@/features/e-brain";
+
 export default function Page() {
-  return null;
+  return <EBrain />;
 }

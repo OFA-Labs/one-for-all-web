@@ -6,7 +6,7 @@ import {
   getTodayInKolkata,
   shiftPeriod,
   startOfWeek,
-} from "../src/lib/history-calendar";
+} from "../src/features/history/lib/history-calendar";
 
 test("calendar dates use Kolkata across UTC midnight and year boundaries", () => {
   expect(getTodayInKolkata(new Date("2026-11-15T19:00:00Z"))).toBe(
