@@ -1,18 +1,37 @@
+# Dependencies
 node_modules/
+
+# Build output
 .next/
 out/
-.venv/
+*.tsbuildinfo
+
+# Environment (keep the names-only template)
 .env*
 !.env.example
+
+# Test output and local browsers
 playwright-report/
 test-results/
 .cache/
-*.tsbuildinfo
-*.log
+
+# Python tooling
+.venv/
+__pycache__/
+*.pyc
 
 # Local tool output and oversized renders (not source; >100 MB files exceed GitHub limits)
 artifacts/
 .promptible/
-__pycache__/
-*.pyc
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.idea/
 .claude/settings.local.json

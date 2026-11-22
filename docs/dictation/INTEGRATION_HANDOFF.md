@@ -2,7 +2,7 @@
 
 ## Implemented boundary
 
-`src/lib/dictation/contracts.ts` defines the host/service seams. `src/lib/dictation/mock-services.ts` is the only implementation instantiated by `src/components/dictation/provider.tsx`.
+`src/lib/dictation/contracts.ts` defines the host/service seams. `src/lib/dictation/mock-services.ts` is the only implementation instantiated by `src/features/settings/components/dictation/dictation-provider.tsx`.
 
 The adapter performs no network requests, microphone access, audio recording, speech recognition, native input injection or automatic system-clipboard changes. Artifact IDs identify **mock recovery data**, not audio files. Service names such as `startCapture` are deliberately interfaces; their mock implementations are clearly labeled `BACKEND NOT IMPLEMENTED`.
 

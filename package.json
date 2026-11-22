@@ -6,14 +6,14 @@
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
-    "start": "next start --hostname 127.0.0.1",
+    "preview": "next start --hostname 127.0.0.1",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "playwright test",
+    "format": "prettier --write src tests scripts *.ts *.mjs *.json",
     "test:ui": "playwright test --ui",
     "docs:generate": "node --experimental-strip-types scripts/generate-handoff.ts",
     "verify": "npm run typecheck && npm run lint && npm run build && npm test",
-    "format": "prettier --write src tests scripts *.ts *.mjs *.json",
     "review": "node scripts/review.mjs"
   },
   "engines": {
