@@ -9,11 +9,12 @@
     "preview": "next start --hostname 127.0.0.1",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "check:arch": "depcruise src --config .dependency-cruiser.cjs",
     "test": "playwright test",
     "format": "prettier --write src tests scripts *.ts *.mjs *.json",
     "test:ui": "playwright test --ui",
     "docs:generate": "node --experimental-strip-types scripts/generate-handoff.ts",
-    "verify": "npm run typecheck && npm run lint && npm run build && npm test",
+    "verify": "npm run typecheck && npm run check:arch && npm run lint && npm run build && npm test",
     "review": "node scripts/review.mjs"
   },
   "engines": {
@@ -39,6 +40,7 @@
     "@types/node": "26.6.6",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "dependency-cruiser": "17.4.3",
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.6",
     "postcss": "8.5.33",
