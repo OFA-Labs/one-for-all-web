@@ -11,7 +11,7 @@ type Theme = {
   innerText: string;
 };
 
-/** The exact surfaces required by the three-theme specification. */
+/** The exact surfaces required by the two-theme specification. */
 const THEMES: Theme[] = [
   {
     id: "obsidian",
@@ -22,16 +22,6 @@ const THEMES: Theme[] = [
     card: "rgb(9, 9, 9)",
     inner: "rgb(16, 16, 16)",
     innerText: "rgb(255, 255, 255)",
-  },
-  {
-    id: "titanium",
-    name: "Titanium",
-    caption: "Black + Grey",
-    canvas: "rgb(52, 52, 52)",
-    sidebar: "rgb(41, 41, 41)",
-    card: "rgb(41, 41, 41)",
-    inner: "rgb(255, 255, 255)",
-    innerText: "rgb(0, 0, 0)",
   },
   {
     id: "aurora",
@@ -62,24 +52,23 @@ async function styleOf(page: Page, selector: string, property: string) {
   }, property);
 }
 
-test("shows exactly three themes and defaults to Obsidian", async ({ page }) => {
+test("shows exactly two themes and defaults to Obsidian", async ({ page }) => {
   await page.goto("/playground");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "obsidian");
   await expect(page.locator(".theme-trigger-name")).toHaveText("Obsidian");
 
   await openMenu(page);
   const options = page.getByRole("menuitemradio");
-  await expect(options).toHaveCount(3);
+  await expect(options).toHaveCount(2);
   for (const [i, t] of THEMES.entries()) {
     await expect(options.nth(i)).toContainText(t.name);
     await expect(options.nth(i)).toContainText(t.caption);
   }
   await expect(options.nth(0)).toHaveAttribute("aria-checked", "true");
   await expect(options.nth(1)).toHaveAttribute("aria-checked", "false");
-  await expect(options.nth(2)).toHaveAttribute("aria-checked", "false");
 
   // Each option previews canvas / outer card / inner card with the real tokens.
-  const swatch = options.nth(2).locator(".theme-swatch i");
+  const swatch = options.nth(1).locator(".theme-swatch i");
   await expect(swatch).toHaveCount(3);
 });
 
@@ -112,17 +101,17 @@ test("persists the selection after refresh and client navigation", async ({
   page,
 }) => {
   await page.goto("/playground");
-  await chooseTheme(page, "Titanium");
+  await chooseTheme(page, "Aurora");
   expect(await page.evaluate(() => localStorage.getItem("one-for-all-theme"))).toBe(
-    "titanium",
+    "aurora",
   );
 
   await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "titanium");
-  await expect(page.locator(".theme-trigger-name")).toHaveText("Titanium");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "aurora");
+  await expect(page.locator(".theme-trigger-name")).toHaveText("Aurora");
 
   await page.goto("/settings");
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "titanium");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "aurora");
 });
 
 test("switching is instant: no reload and no component remount", async ({

@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import {
   CalendarDays,
@@ -318,7 +319,14 @@ export function HistoryCalendar() {
       <header className="hc-toolbar">
         <div className="hc-heading">
           <span className="hc-calendar-icon">
-            <CalendarDays size={24} aria-hidden="true" />
+            <Image
+              src="/media/history-plugins.webp"
+              alt=""
+              width={28}
+              height={28}
+              unoptimized
+              aria-hidden="true"
+            />
           </span>
           <div>
             <h1 id="history-title">History</h1>

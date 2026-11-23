@@ -54,6 +54,11 @@
   background: var(--panel-raised);
   color: var(--ink);
 }
+.hc-calendar-icon img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
 .hc-controls {
   display: flex;
   align-items: center;

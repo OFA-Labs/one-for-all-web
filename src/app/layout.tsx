@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
 // Apply the stored theme before first paint so returning users never see a
 // flash of the default theme. The provider then syncs React state to the DOM.
-const themeBootstrap = `(function(){try{var t=localStorage.getItem('one-for-all-theme');document.documentElement.dataset.theme=(t==='obsidian'||t==='titanium'||t==='aurora')?t:'obsidian'}catch(e){document.documentElement.dataset.theme='obsidian'}})();`;
+const themeBootstrap = `(function(){try{var t=localStorage.getItem('one-for-all-theme');document.documentElement.dataset.theme=(t==='obsidian'||t==='aurora')?t:'obsidian'}catch(e){document.documentElement.dataset.theme='obsidian'}})();`;
 
 export default function RootLayout({
   children,

@@ -1,0 +1,54 @@
+{
+  "source": "20261123-0935-35.2398015.mp4",
+  "source_size": [
+    1094,
+    614
+  ],
+  "source_fps": 30,
+  "crop": [
+    6,
+    2,
+    1093,
+    613
+  ],
+  "head_stabilized": true,
+  "eye_overlay": {
+    "center": [
+      0.49954,
+      0.46972
+    ],
+    "size": [
+      0.0184,
+      0.04092
+    ],
+    "separation": 0.04637,
+    "max_offset": [
+      0.0368,
+      0.03601
+    ]
+  },
+  "output_fps": 30,
+  "loop_frames": 168,
+  "outputs": [
+    {
+      "file": "home-gaze-1080p.mp4",
+      "width": 1920,
+      "height": 1080,
+      "fps": 30,
+      "frames": 168
+    },
+    {
+      "file": "home-gaze-4k.mp4",
+      "width": 3840,
+      "height": 2160,
+      "fps": 30,
+      "frames": 168
+    }
+  ],
+  "verification": {
+    "full_decode_errors": 0,
+    "loop_boundary_mae_96px": 0.0305,
+    "adjacent_mae_96px_max": 0.0363,
+    "adjacent_mae_96px_mean": 0.0016
+  }
+}
