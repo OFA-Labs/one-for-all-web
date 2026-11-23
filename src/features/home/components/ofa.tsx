@@ -168,9 +168,13 @@ export function OFA({ initialMode = "ask" }: { initialMode?: "ask" | "read" }) {
         >
           <header className="ofa-heading">
             <div>
+              <span className="ofa-section-label">Home</span>
               <h1 ref={workspaceHeading} tabIndex={-1}>
                 Assistant
               </h1>
+              <p className="ofa-section-purpose">
+                Speak a request, hear a response, or have a page read aloud.
+              </p>
             </div>
             <Button
               variant="outline"

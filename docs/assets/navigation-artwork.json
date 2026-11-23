@@ -1,0 +1,28 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "background": "transparent",
+  "web_export": "Transparent cutouts trimmed and resized to fit 256 pixels, exported as lossless WebP with alpha preserved.",
+  "assets": [
+    {
+      "navigation": "Connections",
+      "source": "First supplied image: two electrical plug ends on teal",
+      "file": "public/media/connections-plugs.webp",
+      "generated_source": "exec-64aee459-2569-46b2-8966-b7ecd8263372.png",
+      "prompt": "Use case: background-extraction. Edit target: the attached electrical plug illustration. Create a precise transparent-background cutout for a website navigation icon. Remove only the entire teal background and its cast-on-background shadow; keep both white plug/socket ends, yellow metal pins, gray shading on the plugs and the two curved white cables unchanged in shape, position, color and orientation. Preserve the original separated plug composition and the cables going toward the side edges. No teal, no backdrop, no frame, no icon tile, no new elements, no redesign, no added text. Use genuine alpha transparency, including the gap between the plugs. Crop unused exterior empty space, keep a small clear margin, preserve the wide landscape composition."
+    },
+    {
+      "navigation": "Settings",
+      "source": "Second supplied image: five black gears",
+      "file": "public/media/settings-gears.webp",
+      "generated_source": "exec-caf67ed5-b17c-40cf-bf1c-ed1767cf939c.png",
+      "prompt": "Use case: background-extraction. Edit target: the attached black gear cluster. Make a precise transparent-background cutout of exactly these five gears for a website Settings navigation icon. Preserve all five original gear silhouettes, relative sizes, overlapping layout, the thin concentric rings and all circular holes exactly. Remove the white paper background everywhere including between gears and in the gear holes, leaving real alpha transparency. Keep the gears solid black, do not add color, borders, shadows, a tile, extra gears, text, or a redesigned symbol. Tightly crop the full gear cluster with a small transparent safety margin."
+    },
+    {
+      "navigation": "History",
+      "source": "Third supplied image: overlapping plugin windows",
+      "file": "public/media/history-plugins.webp",
+      "generated_source": "exec-70a2f580-f380-4f6f-9be9-1c69a0367733.png",
+      "prompt": "Use case: background-extraction. Edit target: the attached screenshot showing a diagonal overlapping stack of audio instrument/plugin windows. Extract only the complete original stack of plugin windows as a transparent-background asset for a History navigation icon. Preserve the stack, each window's shape and placement, its original dark gray, brown, blue and green panels and tiny knobs, controls and labels. Do not redesign or replace the windows. Remove the outer white background, the top back-arrow/browser chrome, the right-side cropped page text, and the two floating rounded buttons for expand and refresh at the bottom right. Reconstruct the small plugin panel areas under those two overlay buttons consistently with adjacent window controls. No browser chrome, no page text, no rounded icon tile, no added border, no external drop shadow, no extra elements, no new labels. Use real alpha transparency around the complete stack and tight framing with a small clear margin."
+    }
+  ]
+}

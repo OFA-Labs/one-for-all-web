@@ -121,6 +121,13 @@
   letter-spacing: 1px;
   line-height: 1.4;
 }
+.ofa-section-label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
 .ofa-heading p {
   margin-top: 6px;
   color: var(--muted);
