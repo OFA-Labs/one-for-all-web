@@ -106,6 +106,6 @@ There is no `vercel.json`, and no environment variables are needed.
 
 ## Further reading
 
-[Backend handoff](docs/BACKEND_HANDOFF.md) · [Dictation integration handoff](docs/dictation/INTEGRATION_HANDOFF.md) · [Design system](docs/DESIGN_SYSTEM.md) · [Coverage matrix](docs/COVERAGE_MATRIX.md) · [Current theme](docs/THEME_REFRESH.md) · [Video assets](docs/VIDEO_ASSET.md)
+[Product spec (iteration 1, final)](docs/SPEC_ITERATION_1.md) · [Backend handoff](docs/BACKEND_HANDOFF.md) · [Dictation integration handoff](docs/dictation/INTEGRATION_HANDOFF.md) · [Design system](docs/DESIGN_SYSTEM.md) · [Coverage matrix](docs/COVERAGE_MATRIX.md) · [Current theme](docs/THEME_REFRESH.md) · [Video assets](docs/VIDEO_ASSET.md)
 
 The files under `docs/` other than the handoffs are dated reports. Any file paths they mention reflect the layout at the time they were written.
