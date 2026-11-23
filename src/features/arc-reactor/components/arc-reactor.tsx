@@ -61,7 +61,7 @@ export function ArcReactor() {
     ],
     deactivating: [
       "OFA Engine powering down",
-      "Slowing the heartbeat before returning to rest",
+      "The heartbeat is paused; returning the engine to rest",
       "Powering down",
     ],
   }[reactor.phase];

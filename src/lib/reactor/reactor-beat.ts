@@ -1,8 +1,8 @@
-/** One clock drives the supplied heart footage, its pump and startup shake. */
+/** Startup feedback timing. The heart video owns its native playback cadence. */
 export const REACTOR_STARTUP_MS = 3500;
 export const REACTOR_SHUTDOWN_MS = 4200;
 
-// Play the supplied introduction once, then repeat its three glowing beats.
+// Retain the existing startup surface feedback, independently of video playback.
 const LOOP_START_MS = 5500;
 const LOOP_END_MS = 7292;
 const LOOP_MS = LOOP_END_MS - LOOP_START_MS;
@@ -12,36 +12,6 @@ const INTRO_BEATS = [750, 1208, 1958, 2792, 3583, 4375, 5083].map(
   (peak) => peak - 55,
 );
 const LOOP_BEATS = [5750, 6375, 6958].map((peak) => peak - 55);
-
-export function reactorMediaTime(elapsedMs: number) {
-  const elapsed = Math.max(0, elapsedMs);
-  return (
-    (elapsed < LOOP_END_MS
-      ? elapsed
-      : LOOP_START_MS + ((elapsed - LOOP_END_MS) % LOOP_MS)) / 1000
-  );
-}
-
-/** Integrate a smooth speed ramp from 1 to 0, preserving the current beat on
- * shutdown. Advancing more slowly spaces out both the filmed and CSS pumps. */
-export function reactorClockAt(
-  reactor: {
-    phase: string;
-    startedAt: number;
-    heartbeatAt: number;
-    duration: number;
-  },
-  now: number,
-) {
-  if (reactor.phase !== "deactivating")
-    return Math.max(0, now - reactor.heartbeatAt);
-  const duration = Math.max(1, reactor.duration);
-  const t = Math.max(0, Math.min(1, (now - reactor.startedAt) / duration));
-  return (
-    Math.max(0, reactor.startedAt - reactor.heartbeatAt) +
-    duration * (t - t ** 3 + 0.5 * t ** 4)
-  );
-}
 
 export function reactorBeatAt(elapsedMs: number) {
   const elapsed = Math.max(0, elapsedMs);

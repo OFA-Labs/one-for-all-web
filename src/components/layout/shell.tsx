@@ -2,19 +2,26 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactElement,
+} from "react";
+import { Tooltip } from "radix-ui";
 import {
   Atom,
   AudioLines,
   Bell,
   Boxes,
+  Check,
   ChevronDown,
   Code2,
   Command,
-  ExternalLink,
   History,
   Menu,
-  Monitor,
   PanelLeftClose,
   PanelLeftOpen,
   Plug,
@@ -34,6 +41,7 @@ import {
 } from "@/components/ui/dialog";
 import { useApp } from "@/app/providers/app-provider";
 import { ReactorVisual } from "@/components/reactor/reactor-visual";
+import { BackgroundCutout } from "@/components/media/background-cutout";
 import { reactorBeatAt, reactorPump } from "@/lib/reactor/reactor-beat";
 import {
   reactorActionLabel,
@@ -48,6 +56,7 @@ type NavItem = {
   name: string;
   icon: LucideIcon;
   image?: string;
+  imageMode?: "monochrome" | "original" | "wide";
 };
 
 // The entry flow owns the whole viewport until the five setup steps are done.
@@ -61,29 +70,76 @@ const STANDALONE_ROUTES = new Set([
 const PUBLIC_ROUTES = new Set([...STANDALONE_ROUTES, "/privacy"]);
 
 const nav: NavItem[] = [
-  { href: "/", name: "Home", icon: AudioLines },
+  {
+    href: "/",
+    name: "Home",
+    icon: AudioLines,
+    image: "/media/home-relaxing.webp",
+  },
   { href: "/playground", name: "Playground", icon: Boxes },
-  { href: "/history", name: "History", icon: History },
+  {
+    href: "/history",
+    name: "History",
+    icon: History,
+    image: "/media/history-plugins.webp",
+    imageMode: "original",
+  },
   { href: "/watchers", name: "Watchers", icon: Bell },
   {
     href: "/arc-reactor",
     name: "OFA Engine",
     icon: Atom,
-    image: "/media/arc-reactor.png",
   },
   {
     href: "/e-brain",
     name: "e-brain",
     icon: Atom,
-    image: "/media/e-brain.png",
+    image: "/media/e-brain-mark.webp",
   },
 ];
 
-// The OFA Engine picture doubles as a status light: it moves when activated
-// and stays still and faded while it is off. e-brain just uses its own picture.
+const settingsNav: NavItem[] = [
+  {
+    href: "/connections",
+    name: "Connections",
+    icon: Plug,
+    image: "/media/connections-plugs.webp",
+    imageMode: "wide",
+  },
+  {
+    href: "/settings",
+    name: "Settings",
+    icon: Settings2,
+    image: "/media/settings-gears.webp",
+  },
+  { href: "/handoff", name: "Developer handoff", icon: Code2 },
+];
+
+function NavHint({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactElement;
+}) {
+  return (
+    <Tooltip.Provider delayDuration={150}>
+      <Tooltip.Root disableHoverableContent>
+        <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Content className="nav-tooltip" side="right" sideOffset={12}>
+            {label}
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+    </Tooltip.Provider>
+  );
+}
+
 /** The eye only moves while a watcher notice is unseen — once every notice is
  * marked seen it settles on a still frame, so it reads as "check this out". */
 function WatcherEye({ size = 19 }: { size?: number }) {
+  const cutoutId = useId();
   const { unseenCount } = useApp();
   const videoRef = useRef<HTMLVideoElement>(null);
   const moving = unseenCount > 0;
@@ -124,10 +180,12 @@ function WatcherEye({ size = 19 }: { size?: number }) {
         }
       }}
     >
+      <BackgroundCutout id={cutoutId} />
       {moving ? (
         <video
           ref={videoRef}
           className="watcher-eye-media"
+          style={{ filter: `url(#${cutoutId})` }}
           poster="/media/watcher-eye-poster.webp"
           autoPlay
           loop
@@ -142,6 +200,7 @@ function WatcherEye({ size = 19 }: { size?: number }) {
       ) : (
         <Image
           className="watcher-eye-media"
+          style={{ filter: `url(#${cutoutId})` }}
           src="/media/watcher-eye-poster.webp"
           alt=""
           width={size}
@@ -153,22 +212,43 @@ function WatcherEye({ size = 19 }: { size?: number }) {
     </span>
   );
 }
-function NavIcon({ item, size = 19 }: { item: NavItem; size?: number }) {
+function NavArtwork({
+  src,
+  size,
+  mode = "monochrome",
+}: {
+  src: string;
+  size: number;
+  mode?: NavItem["imageMode"];
+}) {
+  const cutoutId = useId();
+  const monochrome = mode === "monochrome";
+  return (
+    <span
+      className={cn("nav-image-icon nav-artwork", mode === "wide" && "is-wide")}
+      aria-hidden="true"
+    >
+      {monochrome && <BackgroundCutout id={cutoutId} monochrome />}
+      <Image
+        src={src}
+        alt=""
+        width={size}
+        height={size}
+        unoptimized
+        loading="eager"
+        className={cn("nav-artwork-image", monochrome && "is-monochrome")}
+        style={monochrome ? { filter: `url(#${cutoutId})` } : undefined}
+      />
+    </span>
+  );
+}
+function NavIcon({ item, size = 30 }: { item: NavItem; size?: number }) {
   const { reactor } = useApp();
   if (item.href === "/arc-reactor")
     return <ReactorVisual reactor={reactor} compact />;
   if (item.href === "/watchers") return <WatcherEye size={size} />;
   if (!item.image) return <item.icon size={size} aria-hidden="true" />;
-  return (
-    <Image
-      src={item.image}
-      alt=""
-      width={size}
-      height={size}
-      aria-hidden="true"
-      className="nav-image-icon"
-    />
-  );
+  return <NavArtwork src={item.image} size={size} mode={item.imageMode} />;
 }
 export function Brand() {
   return (
@@ -341,52 +421,53 @@ export function Shell({ children }: { children: React.ReactNode }) {
     <>
       <Link
         href="/"
+        className="sidebar-home"
         aria-label="ONE FOR ALL home"
+        title="ONE FOR ALL home"
         onClick={() => setMenu(false)}
       >
-        <Brand />
+        <Command size={26} aria-hidden="true" />
       </Link>
-      <span className="nav-group-label" aria-hidden="true">
-        Workspace
-      </span>
       <nav aria-label="Main navigation">
         {nav.map((n) => {
           const link = (
-            <Link
-              key={n.href}
-              href={n.href}
-              onClick={() => setMenu(false)}
-              className={cn(
-                "nav-link",
-                (n.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(n.href)) && "active",
-              )}
-              aria-current={
-                (
-                  n.href === "/"
+            <NavHint label={n.name} key={n.href}>
+              <Link
+                href={n.href}
+                aria-label={n.name}
+                onClick={() => setMenu(false)}
+                className={cn(
+                  "nav-link",
+                  (n.href === "/"
                     ? pathname === "/"
-                    : pathname.startsWith(n.href)
-                )
-                  ? "page"
-                  : undefined
-              }
-            >
-              <NavIcon item={n} />
-              {n.name}
-              {n.href === "/watchers" && unseenCount > 0 && (
-                <span
-                  className="nav-count"
-                  aria-label={`${unseenCount} unseen`}
-                >
-                  {unseenCount}
-                </span>
-              )}
-            </Link>
+                    : pathname.startsWith(n.href)) && "active",
+                )}
+                aria-current={
+                  (
+                    n.href === "/"
+                      ? pathname === "/"
+                      : pathname.startsWith(n.href)
+                  )
+                    ? "page"
+                    : undefined
+                }
+              >
+                <NavIcon item={n} />
+                <span className="sr-only">{n.name}</span>
+                {n.href === "/watchers" && unseenCount > 0 && (
+                  <span
+                    className="nav-count"
+                    aria-label={`${unseenCount} unseen`}
+                  >
+                    {unseenCount}
+                  </span>
+                )}
+              </Link>
+            </NavHint>
           );
           if (n.href === "/watchers" && unseenCount > 0)
             return (
-              <div className="nav-row watcher-row" key={n.href}>
+              <div className="nav-row nav-watcher-row" key={n.href}>
                 {link}
                 <button
                   type="button"
@@ -399,7 +480,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                     markAllSeen();
                   }}
                 >
-                  Seen
+                  <Check size={15} aria-hidden="true" />
                 </button>
               </div>
             );
@@ -418,68 +499,43 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 title={reactorActionLabel[reactor.phase]}
                 onClick={toggleArcReactor}
               >
-                <Power size={14} aria-hidden="true" />
+                <Power size={16} aria-hidden="true" />
               </button>
             </div>
           );
         })}
       </nav>
       <div className="sidebar-lower">
-        <div className="browser-callout">
-          <Monitor size={20} aria-hidden="true" />
-          <strong>A browser that works with you.</strong>
-          <p>Connect Chrome when you’re ready to make it yours.</p>
-          <Link href="/connections">
-            Explore connections <ExternalLink size={13} aria-hidden="true" />
-          </Link>
-        </div>
-        <span className="nav-group-label" aria-hidden="true">
-          Workspace settings
-        </span>
         <nav aria-label="Workspace settings">
-          <Link
-            className={cn("nav-link", pathname === "/connections" && "active")}
-            href="/connections"
-            onClick={() => setMenu(false)}
-          >
-            <Plug size={18} aria-hidden="true" />
-            Connections
-          </Link>
-          <Link
-            className={cn("nav-link", pathname === "/settings" && "active")}
-            href="/settings"
-            onClick={() => setMenu(false)}
-          >
-            <Settings2 size={18} aria-hidden="true" />
-            Settings
-          </Link>
-          <Link
-            className={cn("nav-link", pathname === "/handoff" && "active")}
-            href="/handoff"
-            onClick={() => setMenu(false)}
-          >
-            <Code2 size={18} aria-hidden="true" />
-            Developer handoff
-          </Link>
+          {settingsNav.map((n) => (
+            <NavHint label={n.name} key={n.href}>
+              <Link
+                className={cn("nav-link", pathname === n.href && "active")}
+                href={n.href}
+                aria-label={n.name}
+                onClick={() => setMenu(false)}
+              >
+                <NavIcon item={n} size={27} />
+                <span className="sr-only">{n.name}</span>
+              </Link>
+            </NavHint>
+          ))}
         </nav>
-        <Link
-          className="sidebar-person"
-          href={role === "visitor" ? "/sign-in" : "/settings"}
+        <NavHint
+          label={role === "visitor" ? "Sign in" : "Your workspace settings"}
         >
-          <span className="avatar">{role === "visitor" ? "G" : "JV"}</span>
-          <div>
-            <strong>
-              {role === "visitor"
-                ? "Make yourself at home"
-                : "Jai’s preview workspace"}
-            </strong>
-            <small>
-              {role === "visitor"
-                ? "Sign in to connect your browser"
-                : `${role} preview · no live account`}
-            </small>
-          </div>
-        </Link>
+          <Link
+            className="sidebar-person"
+            href={role === "visitor" ? "/sign-in" : "/settings"}
+            aria-label={
+              role === "visitor" ? "Sign in" : "Your workspace settings"
+            }
+          >
+            <span className="avatar" aria-hidden="true">
+              {role === "visitor" ? "G" : "JV"}
+            </span>
+          </Link>
+        </NavHint>
       </div>
     </>
   );
@@ -626,7 +682,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </footer>
       </div>
       <Dialog open={menu} onOpenChange={setMenu}>
-        <DialogContent className="mobile-nav-dialog" showCloseButton={false}>
+        <DialogContent
+          className="mobile-nav-dialog"
+          showCloseButton={false}
+          style={{ translate: "none" }}
+        >
           <DialogHeader className="sr-only">
             <DialogTitle>Navigation</DialogTitle>
             <DialogDescription>
@@ -736,11 +796,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <Link
             href={n.href}
             key={n.href}
+            aria-label={n.name}
+            title={n.name}
             aria-current={active?.href === n.href ? "page" : undefined}
             className={cn(active?.href === n.href && "active")}
           >
-            <NavIcon item={n} size={20} />
-            <span>{n.name}</span>
+            <NavIcon item={n} />
+            <span className="sr-only">{n.name}</span>
           </Link>
         ))}
       </nav>

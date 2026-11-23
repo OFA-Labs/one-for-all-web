@@ -1,52 +1,42 @@
-# OFA Engine activation and shutdown
+# OFA Engine video playback
 
-The OFA Engine uses the supplied `WhatsApp Video 2026-11-20 at 07.05.47.mp4`
-animation. The video is remuxed without audio, preserving its original video
-stream and color. Its app assets are:
+The engine uses the complete video supplied as
+`C:\Users\jaiva\Downloads\WhatsApp Video 2026-11-23 at 12.22.46.mp4`.
+`public/media/ofa-engine-heart-loop.mp4` copies its H.264 video stream without
+re-encoding, trimming frames, changing speed, or replacing its motion. Audio
+is removed and the MP4 metadata is moved to the start for browser playback.
+The video stream lasts approximately three seconds at 30 fps.
 
-- `public/media/ofa-engine-heart.mp4`
-- `public/media/ofa-engine-heart-poster.webp`
+`public/media/ofa-engine-heart-loop-poster.webp` is a resting frame from 0.8
+seconds in the same clip. It fills the player before activation or while media
+loads. The static glowing-frame replacement is no longer used by the engine.
 
-The main visual uses a responsive 4:5 viewport and retains the supplied colors.
-The poster matches the new
-footage; the previous reactor animation is no longer displayed. Media layers
-stay mounted in a fixed footprint and become completely invisible at idle.
+Activation plays the native HTML video at `playbackRate = 1`, with `loop`,
+`muted`, and `playsInline`. The complete clip repeats until the user switches
+off. There are no CSS contractions, brightness/saturation animation, synthetic
+heartbeat frames, or scripted seeks. Native playback also continues across the
+initializing-to-active state change without replacing the video element.
 
-The provider owns `idle -> activating -> active -> deactivating -> idle`. The heart,
-text action, and sidebar power control share the controller. Controls are
-disabled during transitions, and queued clicks cannot overlap or reverse a
-sequence. Navigation preserves the state; resetting local demo data cancels it.
+Switching off pauses immediately and keeps the last decoded frame fully
+visible, including the navigation icon. Reactivation resumes the same player.
+The existing controller still owns the timed startup and power-down status,
+disabled transition controls, navigation state, and cancellation on reset.
+Offscreen or hidden players pause and resume when visible and still enabled.
+An explicit activation plays the video even with reduced motion; that setting
+continues to disable the surrounding startup screen movement.
 
-| State | Timing | Behavior |
-| --- | --- | --- |
-| Activating | 3500 ms | The heart gradually appears. Screen shake follows the same heartbeat clock, fades over the final 500 ms, and ends with startup. |
-| Active | Until deactivation | The heart keeps pumping at normal playback speed. The screen stays still. |
-| Deactivating | 4200 ms | An integrated easing curve slows the heartbeat clock from full speed to zero. The video and CSS pump slow together; visual layers fade during the final 1800 ms. The screen stays still. |
-| Idle | Until activation | All heart layers are invisible and the video is paused. |
+The main viewport crops the source's letterboxing without changing its frame
+sequence. Navigation media additionally uses an SVG white-background key.
+Home and e-brain marks use the same supplied artwork with their paper
+backgrounds keyed out and their silhouettes colored to match the theme.
+Icon containers, selected links, hover links, and auxiliary navigation controls
+have transparent backgrounds. Selection is indicated by a narrow line.
 
-The supplied introduction plays once from 0 to 7.292 seconds. Playback then repeats
-only the glowing heart segment from 5.5 to 7.292 seconds. Measured footage peaks
-provide the shared pump clock in `src/lib/reactor/reactor-beat.ts`, keeping startup
-translations synchronized with the heart. Header, content, sidebar, and mobile
-navigation move together during startup only.
+`tests/arc-reactor.spec.ts` checks repeated full-length loops at native speed,
+an immediately paused and visible off state, reactivation, navigation, queued
+clicks, late media, and reset cancellation. `tests/navigation.spec.ts` checks
+icon-only navigation, hover/focus labels, bare artwork in all themes, and the
+mobile navigation drawer.
 
-Shutdown preserves the current beat phase. Its integrated speed curve spaces
-out contractions progressively rather than stopping immediately. Chromium's
-minimum supported playback rate is 0.0625; the final fade conceals that playback
-floor while the shared clock reaches zero, then idle pauses the video.
-
-Reduced motion uses 180 ms opacity feedback with paused video and no pumping,
-shake, or ripple. Preference changes are observed live. Hidden or offscreen
-media pauses and rejoins the shared clock when visible. Late decoded frames
-have a readiness fade. Frame updates write local style variables without
-rendering React every frame; timers, frames, observers, and listeners are
-cleaned up.
-
-`tests/arc-reactor.spec.ts` covers naming and media, startup synchronization,
-active pumping without screen shake, gradual shutdown, repeated clicks, delayed
-media, navigation, reset cancellation, and reduced-motion behavior. Test and
-build results should be recorded from the current validation run.
-
-Activation remains a local preview. Model and API connections remain backend
-work. The existing document filename and `/arc-reactor` route are retained for
-compatibility.
+Model/API activation remains a local preview. The `/arc-reactor` route is
+retained for compatibility.
