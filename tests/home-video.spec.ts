@@ -1,32 +1,38 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 
-test("the homepage export is a seamless 4K/60 loop", () => {
+test("the homepage export is a seamless upscaled loop", () => {
   const manifest = JSON.parse(
-    readFileSync("public/media/home-coast-manifest.json", "utf8"),
+    readFileSync("public/media/home-gaze-manifest.json", "utf8"),
   );
-  expect(manifest.output_fps).toBe(60);
-  expect(manifest.loop_frames).toBe(650);
+  expect(manifest.source).toBe("20261123-0935-35.2398015.mp4");
+  expect(manifest.head_stabilized).toBe(true);
+  expect(manifest.output_fps).toBe(30);
+  expect(manifest.loop_frames).toBe(168);
   expect(manifest.verification.full_decode_errors).toBe(0);
   expect(
     manifest.verification.loop_boundary_mae_96px,
   ).toBeLessThanOrEqual(manifest.verification.adjacent_mae_96px_max);
   expect(manifest.outputs).toEqual([
     expect.objectContaining({
-      file: "home-coast-1080p.mp4",
+      file: "home-gaze-1080p.mp4",
       width: 1920,
       height: 1080,
-      fps: 60,
-      frames: 650,
+      fps: 30,
+      frames: 168,
     }),
     expect.objectContaining({
-      file: "home-coast-4k.mp4",
+      file: "home-gaze-4k.mp4",
       width: 3840,
       height: 2160,
-      fps: 60,
-      frames: 650,
+      fps: 30,
+      frames: 168,
     }),
   ]);
+  expect(manifest.eye_overlay).toMatchObject({
+    center: [expect.closeTo(0.5, 2), expect.closeTo(0.47, 2)],
+    max_offset: [expect.any(Number), expect.any(Number)],
+  });
 });
 
 const hero = (page: Page) => page.locator(".assistant-hero");
@@ -51,8 +57,8 @@ async function expectOriginalCopy(page: Page) {
   await expect(hero(page).locator(".ofa-hero-kicker")).toHaveText(
     "ONE FOR ALL",
   );
-  await expect(hero(page).locator(".ofa-hero-copy")).toHaveText(
-    "A hand with your tasks. A voice for your words.",
+  await expect(hero(page).locator(".ofa-hero-heading")).toHaveText(
+    "Meet the speed you need",
   );
   await expect(
     hero(page).getByRole("button", { name: "Tap to speak", exact: true }),
@@ -104,22 +110,21 @@ test.describe("continuous homepage footage", () => {
     });
     expect(
       await video.evaluate((element: HTMLVideoElement) => element.currentSrc),
-    ).toContain("/media/home-coast-4k.mp4?v=coast-v2");
+    ).toContain("/media/home-gaze-4k.mp4?v=gaze-v2");
     await expectOriginalCopy(page);
 
-    // The decorative video cannot intercept the existing voice-session action.
+    // The decorative video cannot intercept the compact orb control.
     await hero(page)
       .getByRole("button", { name: "Tap to speak", exact: true })
       .click();
-    const dialog = page.getByRole("dialog", { name: "O F A", exact: true });
-    await expect(dialog).toBeVisible();
-    await expect
-      .poll(() =>
-        dialog
-          .getByTestId("voice-animation")
-          .evaluate((element: HTMLVideoElement) => element.currentSrc),
-      )
-      .toContain("/media/one-for-all-4k.mp4");
+    const orb = page.getByTestId("hero-orb-animation");
+    await expect(orb).toBeVisible();
+    expect(
+      await orb.evaluate((element: HTMLVideoElement) => element.currentSrc),
+    ).toContain("/media/home-orb-loop.mp4");
+    await expect(
+      page.getByRole("dialog", { name: "O F A", exact: true }),
+    ).toHaveCount(0);
   });
 
   test("uses the lighter full-HD stream on phones with the same text and controls", async ({
@@ -138,7 +143,7 @@ test.describe("continuous homepage footage", () => {
     ).toEqual({
       width: 1920,
       height: 1080,
-      source: expect.stringContaining("/media/home-coast-1080p.mp4?v=coast-v2"),
+      source: expect.stringContaining("/media/home-gaze-1080p.mp4?v=gaze-v2"),
     });
     await expectOriginalCopy(page);
     expect(
@@ -219,6 +224,101 @@ test.describe("continuous homepage footage", () => {
   });
 });
 
+test("the character's eyes follow the cursor while the loop stays intact", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  const video = homeVideo(page);
+  await expectPlaying(video);
+  const gaze = page.locator(".home-hero-gaze");
+  await expect(gaze).toHaveAttribute("data-ready", "true");
+  await expect(gaze.locator(".home-hero-eye")).toHaveCount(2);
+  const frameSize = await gaze.evaluate((element: HTMLElement) => ({
+    width: element.offsetWidth,
+    height: element.offsetHeight,
+  }));
+  expect(frameSize.width).toBeGreaterThan(0);
+  expect(frameSize.height).toBeGreaterThan(0);
+
+  const offsetX = () =>
+    gaze.evaluate((element: HTMLElement) =>
+      parseFloat(element.style.getPropertyValue("--gaze-x")),
+    );
+  const offsetY = () =>
+    gaze.evaluate((element: HTMLElement) =>
+      parseFloat(element.style.getPropertyValue("--gaze-y")),
+    );
+  expect(await offsetX()).toBeCloseTo(0, 1);
+
+  await page.mouse.move(40, 40);
+  await expect.poll(offsetX).toBeLessThan(-10);
+  await expect.poll(offsetY).toBeLessThan(-5);
+  const upperLeft = await offsetX();
+
+  await page.mouse.move(1400, 960);
+  await expect.poll(offsetX).toBeGreaterThan(10);
+  await expect.poll(offsetY).toBeGreaterThan(5);
+  expect(await offsetX()).toBeGreaterThan(upperLeft);
+
+  await expect
+    .poll(() =>
+      gaze.evaluate(
+        (element) => getComputedStyle(element.firstElementChild!).transform,
+      ),
+    )
+    .not.toBe("none");
+  await expect(video).toBeVisible();
+  await expect(video).toHaveCSS("opacity", "1");
+});
+
+test("the compact orb appears inside the head and disappears instantly on stop", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  const trigger = hero(page).getByRole("button", {
+    name: "Tap to speak",
+    exact: true,
+  });
+  const slot = page.locator(".home-hero-orb-slot");
+  const eyes = page.locator(".home-hero-gaze-pair");
+  const orb = page.getByTestId("hero-orb-animation");
+  await expect(orb).toHaveCount(1); // preloaded from mount
+  expect(await orb.getAttribute("preload")).toBe("auto");
+  await expect(slot).not.toBeVisible();
+  await expect(eyes).toHaveCSS("opacity", "1");
+
+  await trigger.click();
+  await expect(slot).toBeVisible();
+  await expect(eyes).toHaveCSS("opacity", "0");
+  await expect(
+    page.getByRole("dialog", { name: "O F A", exact: true }),
+  ).toHaveCount(0);
+  await expect
+    .poll(() =>
+      orb.evaluate((element: HTMLVideoElement) => !element.paused),
+    )
+    .toBe(true);
+  const slotBox = (await slot.boundingBox())!;
+  const frameBox = (await page.locator(".home-hero-gaze").boundingBox())!;
+  expect(slotBox.x + slotBox.width / 2).toBeCloseTo(
+    frameBox.x + frameBox.width * 0.4995,
+    0,
+  );
+  expect(slotBox.y + slotBox.height / 2).toBeCloseTo(
+    frameBox.y + frameBox.height * 0.4985,
+    0,
+  );
+
+  await hero(page).getByRole("button", { name: "Stop", exact: true }).click();
+  await expect(slot).not.toBeVisible();
+  await expect(eyes).toHaveCSS("opacity", "1");
+  await expect
+    .poll(() => orb.evaluate((element: HTMLVideoElement) => element.paused))
+    .toBe(true);
+});
+
 test("reduced motion keeps the homepage footage still and leaves the existing actions usable", async ({
   page,
 }) => {
@@ -229,8 +329,9 @@ test("reduced motion keeps the homepage footage still and leaves the existing ac
   await expect(background).toBeVisible();
   await expect(background).toHaveCSS(
     "background-image",
-    /home-coast-poster\.webp\?v=coast-v2/,
+    /home-gaze-poster\.webp\?v=gaze-v2/,
   );
+  await expect(page.locator(".home-hero-gaze")).toHaveCSS("opacity", "0");
   await expect
     .poll(() => video.evaluate((element: HTMLVideoElement) => element.paused))
     .toBe(true);
@@ -245,7 +346,8 @@ test("reduced motion keeps the homepage footage still and leaves the existing ac
   await hero(page)
     .getByRole("button", { name: "Tap to speak", exact: true })
     .click();
+  await expect(page.locator(".home-hero-orb-slot")).toBeVisible();
   await expect(
     page.getByRole("dialog", { name: "O F A", exact: true }),
-  ).toBeVisible();
+  ).toHaveCount(0);
 });

@@ -10,15 +10,16 @@ for (const width of [375, 1440]) {
     const bounds = (await stage.boundingBox())!;
     // The hero is a focused, single-screen stage on desktop and is shortened on
     // phones so the workspace controls appear in the first screen.
-    expect(bounds).toEqual({ x: 0, y: 0, width, height: width > 700 ? 960 : 460 });
-    const orb = (await page
-      .locator(".hero-orb-button .voice-video-stage")
-      .boundingBox())!;
-    expect(orb.width).toBeLessThanOrEqual(width > 700 ? 64 : 92);
-    expect(orb.x + orb.width / 2).toBeCloseTo(width / 2, 1);
-    const orbCenter = orb.y + orb.height / 2;
-    expect(orbCenter).toBeGreaterThan(100);
-    expect(orbCenter).toBeLessThan(520);
+    expect(bounds).toEqual({
+      x: 0,
+      y: 0,
+      width,
+      height: width > 700 ? 960 : 460,
+    });
+    const copy = (await page.locator(".ofa-hero-center").boundingBox())!;
+    expect(copy.x + copy.width / 2).toBeCloseTo(width / 2, 1);
+    expect(copy.y).toBeGreaterThan(60);
+    expect(copy.y + copy.height).toBeLessThan(300);
     await expect(
       page.getByRole("button", { name: "Tap to speak", exact: true }),
     ).toBeInViewport();
@@ -47,7 +48,7 @@ for (const width of [375, 1440]) {
     ).toBeVisible();
     if (width > 700) await expect(page.locator(".sidebar")).toBeVisible();
   });
-  test(`tapping the small orb opens the larger O F A session at ${width}px`, async ({
+  test(`tapping speak shows the orb inside the head at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 960 });
@@ -57,24 +58,22 @@ for (const width of [375, 1440]) {
       exact: true,
     });
     await trigger.click();
-    const dialog = page.getByRole("dialog", { name: "O F A", exact: true });
-    await expect(dialog).toBeVisible();
-    const disc = (await dialog.locator(".ofa-session-orb").boundingBox())!;
-    expect(disc.width).toBe(215);
-    expect(disc.height).toBe(215);
-    const orb = (await dialog.locator(".voice-video-stage").boundingBox())!;
-    // The globe sits compactly inside the black disc with breathing room.
-    expect(orb.width).toBeGreaterThan(150);
-    expect(orb.width).toBeLessThan(disc.width - 20);
-    expect(orb.height).toBeCloseTo(orb.width, 0);
-    expect(orb.x - disc.x).toBeCloseTo(disc.x + disc.width - orb.x - orb.width, 0);
-    await expect(page.locator(".ofa-orb-overlay")).toHaveCSS(
-      "backdrop-filter",
-      "blur(16px)",
+    const slot = page.locator(".home-hero-orb-slot");
+    await expect(slot).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "O F A", exact: true }),
+    ).toHaveCount(0);
+    const orb = (await slot.boundingBox())!;
+    const head = (await page.locator(".home-hero-gaze").boundingBox())!;
+    expect(orb.width).toBeCloseTo(orb.height, 0);
+    expect(orb.x + orb.width / 2).toBeCloseTo(head.x + head.width * 0.4995, 0);
+    expect(orb.y + orb.height / 2).toBeCloseTo(
+      head.y + head.height * 0.4985,
+      0,
     );
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
-    await page.keyboard.press("Escape");
-    await expect(dialog).toHaveCount(0);
+    await page.getByRole("button", { name: "Stop", exact: true }).click();
+    await expect(slot).not.toBeVisible();
     await expect(trigger).toBeFocused();
   });
 }

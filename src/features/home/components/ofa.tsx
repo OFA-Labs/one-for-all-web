@@ -39,6 +39,7 @@ export function OFA({ initialMode = "ask" }: { initialMode?: "ask" | "read" }) {
   const { task } = useApp();
   const [mode, setMode] = useState(initialMode);
   const [sessionOpen, setSessionOpen] = useState(false);
+  const [heroOrbActive, setHeroOrbActive] = useState(false);
   const [moving, setMoving] = useState(false);
   const [source, setSource] = useState<"ask" | "read">("ask");
   const [reading, setReading] = useState(false);
@@ -46,6 +47,7 @@ export function OFA({ initialMode = "ask" }: { initialMode?: "ask" | "read" }) {
   const [orb, setOrb] = useState<OrbState | null>(null);
   const [animationFailed, setAnimationFailed] = useState(false);
   const sessionVideo = useRef<HTMLVideoElement>(null);
+  const heroOrbVideo = useRef<HTMLVideoElement>(null);
   const workspaceHeading = useRef<HTMLHeadingElement>(null);
   const workspaceRequested = useRef(false);
 
@@ -54,7 +56,12 @@ export function OFA({ initialMode = "ask" }: { initialMode?: "ask" | "read" }) {
     setMoving(false);
     setReading(false);
   }, []);
+  const toggleHeroOrb = useCallback(
+    () => setHeroOrbActive((active) => !active),
+    [],
+  );
   const openSession = useCallback((nextSource: "ask" | "read" = "ask") => {
+    setHeroOrbActive(false);
     setSource(nextSource);
     setSessionOpen(true);
     setMoving(true);
@@ -65,6 +72,19 @@ export function OFA({ initialMode = "ask" }: { initialMode?: "ask" | "read" }) {
     stop();
     setSessionOpen(false);
   }, [stop]);
+  // The compact hero orb is preloaded, so starting/stopping is synchronous.
+  useEffect(() => {
+    const element = heroOrbVideo.current;
+    if (!element) return;
+    if (heroOrbActive) {
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        void element.play().catch(() => {});
+      }
+    } else {
+      element.pause();
+      element.currentTime = 0;
+    }
+  }, [heroOrbActive]);
   const toggleSession = () => {
     if (moving) stop();
     else {
@@ -125,7 +145,30 @@ export function OFA({ initialMode = "ask" }: { initialMode?: "ask" | "read" }) {
         className="assistant-hero ofa-hero"
         aria-label="O F A voice stage"
       >
-        <HomeVideo active={!sessionOpen} />
+        <HomeVideo
+          active={!sessionOpen}
+          eyesHidden={heroOrbActive}
+          orbSlot={
+            <video
+              ref={heroOrbVideo}
+              className="home-hero-orb-video"
+              data-testid="hero-orb-animation"
+              muted
+              loop
+              playsInline
+              preload="auto"
+              poster="/media/home-orb-poster.webp"
+              disablePictureInPicture
+              disableRemotePlayback
+              aria-hidden="true"
+            >
+              <source
+                src="/media/home-orb-loop.mp4?v=orb-v1"
+                type="video/mp4"
+              />
+            </video>
+          }
+        />
         <nav className="ofa-hero-nav" aria-label="Workspace shortcuts">
           <Link href="/playground">Playground</Link>
           <Link href="/history">History</Link>
@@ -136,22 +179,22 @@ export function OFA({ initialMode = "ask" }: { initialMode?: "ask" | "read" }) {
         </nav>
         <div className="ofa-hero-center">
           <p className="ofa-hero-kicker">ONE FOR ALL</p>
+          <h2 className="ofa-hero-heading">Meet the speed you need</h2>
           <button
-            className="hero-orb-button"
-            disabled={!ready}
-            aria-label="Tap to speak"
-            aria-haspopup="dialog"
+            className="ofa-hero-speak"
+            aria-pressed={heroOrbActive}
             aria-keyshortcuts="F1 F2"
-            onClick={() => openSession("ask")}
+            onClick={toggleHeroOrb}
           >
-            <span className="voice-video-stage" aria-hidden="true" />
-            <span className="hero-orb-label">Tap to speak</span>
+            {heroOrbActive ? "Stop" : "Tap to speak"}
           </button>
-          <p className="ofa-hero-copy">
-            A hand with your tasks. A voice for your words.
-          </p>
-          <a className="ofa-enter-workspace" href="#ofa-workspace">
-            Open workspace <ArrowDown size={14} aria-hidden="true" />
+          <a
+            className="ofa-enter-workspace"
+            href="#ofa-workspace"
+            aria-label="Open workspace"
+          >
+            <ArrowDown size={14} aria-hidden="true" />
+            <span className="sr-only">Open workspace</span>
           </a>
         </div>
       </section>
