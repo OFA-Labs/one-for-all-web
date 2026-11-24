@@ -1246,6 +1246,47 @@ export const features: Feature[] = [
       "Stale results, cancellation and interrupted preview recovery",
     ],
   }),
+  feature({
+    id: "ebrain.memory",
+    name: "E-Brain shared memory (experimental)",
+    module: "e-brain",
+    spec: "B4.3 (amended), B7.1 Memory, FINAL/03-interfaces.md",
+    purpose:
+      "Show what the shared project memory holds, how reliable it is, and let a human confirm, approve or undo changes.",
+    frontend: [
+      "Capacity meter with ok, near-limit and beyond-tested-range states read from /v1/ebrain/limits",
+      "Can/can't panel, known flaws, status badges, provenance drawer, heal approvals and same-fact review",
+    ],
+    backend: [
+      "FastAPI service one-for-all-api/ebrain on 127.0.0.1:8765 over a per-user SQLite store",
+      "Bearer-token identity; T8 visibility enforced in SQL; human-only routes for resolve, approve, pairs and rollback",
+    ],
+    data: "Accepted memory writes per user and project (value, agent, authority, provenance, supersedes, ts); heal proposals; same-fact links. Secrets are redacted before storage.",
+    api: {
+      method: "GET",
+      path: "/v1/ebrain/limits",
+      auth: "Bearer token mapped to user and agent by EBRAIN_TOKENS",
+      request: { project: "one-for-all" },
+      response: {
+        memory_count: 412,
+        capacity_hard: 1000,
+        capacity_state: "ok",
+        heal_mode: "propose",
+        subject_join: "off",
+      },
+    },
+    rules: [
+      "Every number and sentence on the page comes from /v1/ebrain/limits",
+      "Self-heal is approval-required by default; nothing is merged automatically",
+      "Above 1,000 memories every answer is labelled beyond tested range",
+    ],
+    success:
+      "The e-brain page shows the capacity meter, honest limits and the current memory with provenance.",
+    errors: [
+      "401 missing or unknown token",
+      "Service unreachable: the page says nothing was changed and offers Retry",
+    ],
+  }),
 ];
 export const featureById = Object.fromEntries(
   features.map((f) => [f.id, f]),

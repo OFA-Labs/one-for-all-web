@@ -12,7 +12,7 @@
 
 The web frontend for **ONE FOR ALL**, a voice-first assistant by OFA Labs.
 
-This repo is the **frontend only**. It is an interactive, frontend-only preview: there is no real authentication, microphone, browser control, database, AI or third-party API. Every task, history record and connection is local sample data. The backend (voice agent and agentic workflow) will live in the separate [`one-for-all-api`](https://github.com/OFA-Labs/one-for-all-api) repo.
+This repo is the **web frontend**. Its default mode is an interactive preview: tasks, history records and connections are local sample data, with no real authentication, microphone, browser control or AI. E-Brain can optionally connect to the local SQLite memory service in the separate [`one-for-all-api`](https://github.com/OFA-Labs/one-for-all-api) repo; its capacity view otherwise uses preview fixtures. Voice-agent and workflow integration belong to later milestones.
 
 Stack: Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui on Radix · Playwright.
 
@@ -55,7 +55,7 @@ On Windows, `scripts/setup.ps1` does all of the above, plus the Python tooling v
 
 ## Environment variables
 
-The app reads **no** environment variables. `.env.example` lists the one optional tooling variable, `ONE_FOR_ALL_PREVIEW_URL`, which `scripts/review.mjs` uses as its base URL.
+With `NEXT_PUBLIC_EBRAIN_API_URL` unset, e-brain uses local preview fixtures and makes no API requests. To connect to the local E-Brain service, set `NEXT_PUBLIC_EBRAIN_API_URL` to its loopback URL and `NEXT_PUBLIC_EBRAIN_TOKEN` to the intended user's token, then rebuild. These `NEXT_PUBLIC_` values are visible to the browser; configure them only for your own local session, not a shared deployment. The API accepts the local web origins on ports 3000 and 3100. `.env.example` lists these names and the optional `ONE_FOR_ALL_PREVIEW_URL` used by `scripts/review.mjs`.
 
 ## Project structure
 
@@ -69,7 +69,7 @@ src/
     history/            History calendar (components/, lib/)
     watcher/            PR watchers
     arc-reactor/        OFA Engine
-    e-brain/            Reserved placeholder (renders nothing on purpose)
+    e-brain/            Shared project memory (EXPERIMENTAL)
     settings/           Settings, Caps Lock dictation (components/, types/)
     account/ connections/ voice-lab/ reference/
   components/

@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "experimental": true,
+  "copy": {
+    "meter_ok": "{n} / {hard} memories — inside the tested range",
+    "meter_near": "{n} / {hard} memories — close to the tested limit",
+    "meter_beyond": "{n} / {hard} memories — beyond the tested range: answers are unreliable",
+    "capacity_note": "This stores your first ~1,000 memories reliably-ish. Beyond that it is unreliable — this is a known limitation of the project as of now.",
+    "experimental_badge": "EXPERIMENTAL",
+    "heal_state": {
+      "off": "Self-heal: OFF",
+      "propose": "Self-heal: approval required",
+      "auto": "Self-heal: automatic (not recommended)"
+    }
+  },
+  "capabilities": [
+    {
+      "id": "latest_wins",
+      "can": true,
+      "example": "Claude wrote TTL = 60 min on Monday, Codex wrote 30 min on Wednesday → you see only 30 min; the timeline lists both writes.",
+      "tier": "MEASURED (synthetic sealed seeds)",
+      "metric": "S1 correct_version_acc",
+      "at_1k": "0.86–0.95",
+      "at_10k": "0.62–0.69"
+    },
+    {
+      "id": "reworded_split",
+      "can": false,
+      "example": "Two agents word the same fact differently → it may show BOTH as current until you confirm.",
+      "tier": "MEASURED (synthetic sealed seeds)",
+      "metric": "S1 zombie_rate",
+      "at_1k": "0.10–0.30",
+      "at_10k": "0.55–0.65"
+    },
+    {
+      "id": "external_quarantine",
+      "can": true,
+      "example": "An external web page tries to overwrite a human decision → quarantined, shown only as UNTRUSTED.",
+      "tier": "MEASURED (synthetic sealed seeds)",
+      "metric": "injection_success_rate",
+      "at_1k": "0.00",
+      "at_10k": "0.00"
+    },
+    {
+      "id": "private_isolation",
+      "can": true,
+      "example": "Claude's private note is never shown to Codex or the voice agent.",
+      "tier": "MEASURED (synthetic sealed seeds)",
+      "metric": "leak_count",
+      "at_1k": "0.00",
+      "at_10k": "0.00"
+    },
+    {
+      "id": "same_time_conflict",
+      "can": false,
+      "example": "Claude and Codex write different values at the same moment → it should show a conflict, but sometimes shows one value as current.",
+      "tier": "MEASURED (synthetic sealed seeds)",
+      "metric": "conflict_acc",
+      "at_1k": "0.50–1.00",
+      "at_10k": "0.47–0.68"
+    },
+    {
+      "id": "rollback",
+      "can": true,
+      "example": "Undo everything after Tuesday 10:00 → the brain answers exactly as it did then.",
+      "tier": "MEASURED (synthetic sealed seeds)",
+      "metric": "S11 rollback_exact",
+      "at_1k": "1.00",
+      "at_10k": "1.00"
+    },
+    {
+      "id": "ambiguous_question",
+      "can": false,
+      "example": "\"What's the TTL?\" when there are three TTLs → you may get only some of them.",
+      "tier": "MEASURED (synthetic sealed seeds)",
+      "metric": "ambiguous_recall",
+      "at_1k": "0.50–1.00",
+      "at_10k": "0.07–0.27"
+    }
+  ],
+  "known_flaws": [
+    {
+      "id": "split_chains",
+      "text": "Reworded updates can leave the old value marked current.",
+      "metric": "zombie_rate",
+      "at_1k": "0.08–0.28",
+      "at_10k": "0.56–0.65"
+    },
+    {
+      "id": "recall_at_scale",
+      "text": "Above 1,000 memories it finds the current value much less often.",
+      "metric": "correct_version_acc",
+      "at_1k": "0.84–0.95",
+      "at_10k": "0.62–0.67"
+    },
+    {
+      "id": "heal_harm",
+      "text": "Automatic self-heal hid correct memories in tests, so it needs your approval.",
+      "metric": "heal_harm_rate",
+      "at_1k": "0.00–0.17",
+      "at_10k": "0.73–0.83"
+    },
+    {
+      "id": "subject_join_experiment",
+      "text": "The experimental same-fact detector did not reduce stale values in tests and is OFF.",
+      "metric": "zombie_rate change vs v2 (public seeds)",
+      "at_1k": "+0.000",
+      "at_10k": "+0.002"
+    }
+  ],
+  "measured_source": "Synthetic benchmark only: judge/results_summary.md (sealed seeds 556920, 878791, 235664; 10k adds public 101) and FINAL/reference/results (public seeds 101–103)."
+}
