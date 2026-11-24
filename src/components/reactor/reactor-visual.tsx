@@ -74,7 +74,7 @@ export function ReactorVisual({
       data-reactor-state={reactor.phase}
       aria-hidden="true"
     >
-      {compact && <BackgroundCutout id={cutoutId} />}
+      {compact && <BackgroundCutout id={cutoutId} duotone />}
       <video
         ref={media}
         className="reactor-core-video"

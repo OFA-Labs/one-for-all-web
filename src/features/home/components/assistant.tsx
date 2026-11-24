@@ -4,14 +4,11 @@ import { useState } from "react";
 import {
   ArrowRight,
   ArrowUp,
-  AudioLines,
   ChevronRight,
   GitPullRequest,
   Headphones,
-  Plus,
   Search,
   Send,
-  ShieldCheck,
 } from "lucide-react";
 import { useApp } from "@/app/providers/app-provider";
 import { Button } from "@/components/ui/button";
@@ -30,12 +27,7 @@ import {
   scenarios,
   type OrbState,
 } from "@/lib/demo";
-import {
-  IntegrationButton,
-  Pill,
-  SectionLink,
-  TrustLine,
-} from "@/components/common";
+import { IntegrationButton, Pill, SectionLink } from "@/components/common";
 import {
   Plan,
   TaskLink,
@@ -51,8 +43,7 @@ export function Assistant({
   onOrbChange: (state: OrbState | null) => void;
   onInterrupt: () => void;
 }) {
-  const { task, act, start, clear, integrate, notify } = useApp();
-  const [prompt, setPrompt] = useState("");
+  const { task, act, start, integrate, notify } = useApp();
   const [queued, setQueued] = useState<string[]>([]);
   const [conflict, setConflict] = useState<string | null>(null);
   const submit = (value: string) => {
@@ -61,7 +52,6 @@ export function Assistant({
     if (command === "pause" || command === "cancel") onInterrupt();
     if (task && command !== "none") {
       act({ type: command });
-      setPrompt("");
       return;
     }
     if (task && !["completed", "cancelled", "declined"].includes(task.status)) {
@@ -70,90 +60,12 @@ export function Assistant({
     }
     integrate(scenarios[classifyPreview(value)].feature, () => {
       start(classifyPreview(value), value);
-      setPrompt("");
       setOrb(null);
     });
   };
   return (
     <>
       <section className="ofa-assistant" aria-label="Ask and act">
-        <div className="ofa-assist-toolbar">
-          <h2>What can I take off your hands?</h2>
-          <Button
-            variant="outline"
-            onClick={() => {
-              if (
-                task &&
-                !["completed", "cancelled", "declined"].includes(task.status)
-              ) {
-                notify(
-                  "Pause or cancel your current preview before starting fresh.",
-                );
-                return;
-              }
-              clear();
-              setOrb(null);
-              onInterrupt();
-              setPrompt("");
-            }}
-          >
-            <Plus size={16} />
-            New conversation
-          </Button>
-        </div>
-        <div className="assistant-grid ofa-assist-idle">
-          <div className="voice-workbench">
-            <div className="voice-topline">
-              <span>
-                <AudioLines size={17} />
-                Message
-              </span>
-              <Pill>
-                {task ? `Preview · ${task.status}` : "Ready when you are"}
-              </Pill>
-            </div>
-            <form
-              className="composer"
-              onSubmit={(e) => {
-                e.preventDefault();
-                submit(prompt);
-              }}
-            >
-              <label className="sr-only" htmlFor="assistant-request">
-                Your request
-              </label>
-              <textarea
-                id="assistant-request"
-                placeholder="Ask anything…"
-                value={prompt}
-                rows={2}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    if (e.nativeEvent.isComposing) return;
-                    submit(prompt);
-                  }
-                }}
-              />
-              <div className="composer-bottom">
-                <span>
-                  <ShieldCheck size={13} />
-                  You approve before anything is sent
-                </span>
-                <button
-                  className="send-button"
-                  type="submit"
-                  disabled={!prompt.trim()}
-                  aria-label="Preview typed request"
-                >
-                  <ArrowUp size={20} />
-                </button>
-              </div>
-            </form>
-            <TrustLine />
-          </div>
-        </div>
         {task ? (
           <div className="active-task-grid">
             <div className="active-task-heading">
@@ -341,7 +253,6 @@ export function Assistant({
                 onClick={() => {
                   if (conflict) setQueued((q) => [...q, conflict]);
                   setConflict(null);
-                  setPrompt("");
                 }}
               >
                 Queue this preview ({queued.length}/3)
@@ -351,7 +262,6 @@ export function Assistant({
                 onClick={() => {
                   if (conflict) start(classifyPreview(conflict), conflict);
                   setConflict(null);
-                  setPrompt("");
                 }}
               >
                 Replace current preview

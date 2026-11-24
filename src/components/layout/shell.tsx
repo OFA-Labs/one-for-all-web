@@ -13,15 +13,11 @@ import {
 } from "react";
 import { Tooltip } from "radix-ui";
 import {
-  Atom,
-  AudioLines,
   Bell,
-  Boxes,
   Check,
   ChevronDown,
   Code2,
   Command,
-  History,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
@@ -52,10 +48,18 @@ import {
 import { ThemeSelector } from "./theme-selector";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+type NavGlyphKey =
+  | "home"
+  | "playground"
+  | "history"
+  | "watchers"
+  | "heart"
+  | "brain";
 type NavItem = {
   href: string;
   name: string;
-  icon: LucideIcon;
+  glyph?: NavGlyphKey;
+  icon?: LucideIcon;
   image?: string;
   imageMode?: "monochrome" | "original" | "wide";
   /** Optical size inside the fixed artwork frame, not a source-image edit. */
@@ -74,48 +78,12 @@ const STANDALONE_ROUTES = new Set([
 const PUBLIC_ROUTES = new Set([...STANDALONE_ROUTES, "/privacy"]);
 
 const nav: NavItem[] = [
-  {
-    href: "/",
-    name: "Home",
-    icon: AudioLines,
-    image: "/media/home-relaxing.webp",
-    imageScale: 1,
-  },
-  {
-    href: "/playground",
-    name: "Playground",
-    icon: Boxes,
-    iconSize: 28,
-  },
-  {
-    href: "/history",
-    name: "History",
-    icon: History,
-    image: "/media/history-plugins.webp",
-    imageMode: "original",
-    imageScale: 0.94,
-  },
-  {
-    href: "/watchers",
-    name: "Watchers",
-    icon: Bell,
-    image: "/media/watchers-folder.png",
-    imageMode: "original",
-    imageScale: 1,
-  },
-  {
-    href: "/arc-reactor",
-    name: "OFA Engine",
-    icon: Atom,
-  },
-  {
-    href: "/e-brain",
-    name: "e-brain",
-    icon: Atom,
-    image: "/media/e-brain-mark-v2.png",
-    imageMode: "original",
-    imageScale: 1,
-  },
+  { href: "/", name: "Home", glyph: "home" },
+  { href: "/playground", name: "Playground", glyph: "playground" },
+  { href: "/history", name: "History", glyph: "history" },
+  { href: "/watchers", name: "Watchers", glyph: "watchers" },
+  { href: "/arc-reactor", name: "OFA Engine", glyph: "heart" },
+  { href: "/e-brain", name: "e-brain", glyph: "brain" },
 ];
 
 const settingsNav: NavItem[] = [
@@ -123,7 +91,7 @@ const settingsNav: NavItem[] = [
     href: "/connections",
     name: "Connections",
     icon: Plug,
-    image: "/media/connections-plugs.webp",
+    image: "/media/nav/nav-connections.png",
     imageMode: "wide",
     imageScale: 1,
   },
@@ -194,24 +162,149 @@ function NavArtwork({
     </span>
   );
 }
-function NavIcon({ item }: { item: NavItem }) {
+
+/**
+ * The one place that knows how a section is drawn. Every glyph is baked into
+ * the same 48x48 optical box; the wrapper owns the 64x64 tile, state opacity,
+ * the count badge and the shared status-glyph slot.
+ */
+function NavGlyph({ item }: { item: NavItem }) {
   const { reactor } = useApp();
-  if (item.href === "/arc-reactor")
-    return <ReactorVisual reactor={reactor} compact />;
-  if (!item.image)
+  if (item.glyph === "heart")
     return (
-      <item.icon
-        size={item.iconSize ?? 26}
-        strokeWidth={1.7}
+      <span className="nav-heart">
+        <ReactorVisual reactor={reactor} compact />
+        <Image
+          src="/media/nav/nav-heart.svg"
+          alt=""
+          width={48}
+          height={48}
+          unoptimized
+          loading="eager"
+          className="nav-heart-glass"
+          aria-hidden="true"
+        />
+      </span>
+    );
+  if (item.glyph)
+    return (
+      <Image
+        src={`/media/nav/nav-${item.glyph}.svg`}
+        alt=""
+        width={48}
+        height={48}
+        unoptimized
+        loading="eager"
+        draggable={false}
+        className="nav-glyph-image"
         aria-hidden="true"
       />
     );
+  if (!item.image) {
+    const Glyph = item.icon;
+    return Glyph ? (
+      <Glyph
+        size={item.iconSize ?? 26}
+        strokeWidth={1.5}
+        aria-hidden="true"
+      />
+    ) : null;
+  }
   return (
     <NavArtwork
       src={item.image}
       mode={item.imageMode}
       scale={item.imageScale}
     />
+  );
+}
+
+type NavStatus = {
+  kind: "check" | "power";
+  label: string;
+  title: string;
+  onClick: () => void;
+  pressed?: boolean;
+  disabled?: boolean;
+  active?: boolean;
+  state?: string;
+};
+
+/** Check and power are one control: same 14px glyph, same corner, same ink. */
+function NavStatusGlyph({
+  kind,
+  label,
+  title,
+  onClick,
+  pressed,
+  disabled,
+  active,
+  state,
+}: NavStatus) {
+  const Glyph = kind === "check" ? Check : Power;
+  return (
+    <button
+      type="button"
+      className={cn(
+        "nav-utility nav-status",
+        kind === "check" ? "watcher-seen" : "arc-toggle",
+        active && "is-active",
+      )}
+      data-reactor-state={state}
+      aria-label={label}
+      aria-pressed={kind === "power" ? pressed : undefined}
+      aria-busy={disabled || undefined}
+      disabled={disabled}
+      title={title}
+      onClick={onClick}
+    >
+      <Glyph size={14} strokeWidth={1.5} aria-hidden="true" />
+    </button>
+  );
+}
+
+function NavIcon({
+  item,
+  active,
+  pressed,
+  badge,
+  status,
+  onNavigate,
+}: {
+  item: NavItem;
+  active: boolean;
+  pressed: boolean;
+  badge?: { count: number; label: string };
+  status?: NavStatus;
+  onNavigate: () => void;
+}) {
+  return (
+    <div className="nav-item">
+      <NavHint label={item.name}>
+        <Link
+          href={item.href}
+          aria-label={item.name}
+          aria-current={active ? "page" : undefined}
+          className={cn(
+            "nav-link",
+            active && "active",
+            pressed && "is-pressed",
+          )}
+          onClick={onNavigate}
+        >
+          <span className="nav-icon" aria-hidden="true">
+            <NavGlyph item={item} />
+          </span>
+          {badge && (
+            <span className="nav-count" aria-label={badge.label}>
+              {badge.count}
+            </span>
+          )}
+          <span className="sr-only">{item.name}</span>
+        </Link>
+      </NavHint>
+      {status && <NavStatusGlyph {...status} />}
+    </div>
   );
 }
 
@@ -485,71 +578,46 @@ export function Shell({ children }: { children: React.ReactNode }) {
         {nav.map((n) => {
           const isActive =
             n.href === "/" ? pathname === "/" : pathname.startsWith(n.href);
+          const watcherBadge =
+            n.href === "/watchers" && unseenCount > 0
+              ? {
+                  count: unseenCount,
+                  label: `${unseenCount} unseen`,
+                }
+              : undefined;
           return (
-            <div className="nav-item" key={n.href}>
-              <NavHint label={n.name}>
-                <Link
-                  href={n.href}
-                  aria-label={n.name}
-                  onClick={() => {
-                    pulse(n.href);
-                    setMenu(false);
-                  }}
-                  className={cn(
-                    "nav-link",
-                    isActive && "active",
-                    pressedHref === n.href && "is-pressed",
-                  )}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  <span className="nav-icon-slot">
-                    <NavIcon item={n} />
-                  </span>
-                  <span className="sr-only">{n.name}</span>
-                  {n.href === "/watchers" && unseenCount > 0 && (
-                    <span
-                      className="nav-count"
-                      aria-label={`${unseenCount} unseen`}
-                    >
-                      {unseenCount}
-                    </span>
-                  )}
-                </Link>
-              </NavHint>
-              {n.href === "/watchers" && unseenCount > 0 && (
-                <button
-                  type="button"
-                  className="nav-utility watcher-seen"
-                  aria-label={`Mark ${unseenCount} watcher notification${unseenCount === 1 ? "" : "s"} as seen`}
-                  title="Mark all watcher notices as seen"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    markAllSeen();
-                  }}
-                >
-                  <Check size={12} aria-hidden="true" />
-                </button>
-              )}
-              {n.href === "/arc-reactor" && (
-                <button
-                  type="button"
-                  className={cn(
-                    "nav-utility arc-toggle",
-                    arcReactorActive && "is-active",
-                  )}
-                  data-reactor-state={reactor.phase}
-                  aria-label={reactorActionLabel[reactor.phase]}
-                  aria-pressed={arcReactorActive}
-                  aria-busy={reactorIsTransitioning(reactor.phase)}
-                  disabled={reactorIsTransitioning(reactor.phase)}
-                  title={reactorActionLabel[reactor.phase]}
-                  onClick={toggleArcReactor}
-                >
-                  <Power size={12} aria-hidden="true" />
-                </button>
-              )}
-            </div>
+            <NavIcon
+              key={n.href}
+              item={n}
+              active={isActive}
+              pressed={pressedHref === n.href}
+              badge={watcherBadge}
+              onNavigate={() => {
+                pulse(n.href);
+                setMenu(false);
+              }}
+              status={
+                n.href === "/watchers" && unseenCount > 0
+                  ? {
+                      kind: "check",
+                      label: `Mark ${unseenCount} watcher notification${unseenCount === 1 ? "" : "s"} as seen`,
+                      title: "Mark all watcher notices as seen",
+                      onClick: markAllSeen,
+                    }
+                  : n.href === "/arc-reactor"
+                    ? {
+                        kind: "power",
+                        label: reactorActionLabel[reactor.phase],
+                        title: reactorActionLabel[reactor.phase],
+                        onClick: toggleArcReactor,
+                        pressed: arcReactorActive,
+                        disabled: reactorIsTransitioning(reactor.phase),
+                        active: arcReactorActive,
+                        state: reactor.phase,
+                      }
+                    : undefined
+              }
+            />
           );
         })}
       </nav>
@@ -558,29 +626,16 @@ export function Shell({ children }: { children: React.ReactNode }) {
           {settingsNav.map((n) => {
             const isActive = pathname === n.href;
             return (
-              <div className="nav-item" key={n.href}>
-                <NavHint label={n.name}>
-                  <Link
-                    className={cn(
-                      "nav-link",
-                      isActive && "active",
-                      pressedHref === n.href && "is-pressed",
-                    )}
-                    href={n.href}
-                    aria-label={n.name}
-                    aria-current={isActive ? "page" : undefined}
-                    onClick={() => {
-                      pulse(n.href);
-                      setMenu(false);
-                    }}
-                  >
-                    <span className="nav-icon-slot">
-                      <NavIcon item={n} />
-                    </span>
-                    <span className="sr-only">{n.name}</span>
-                  </Link>
-                </NavHint>
-              </div>
+              <NavIcon
+                key={n.href}
+                item={n}
+                active={isActive}
+                pressed={pressedHref === n.href}
+                onNavigate={() => {
+                  pulse(n.href);
+                  setMenu(false);
+                }}
+              />
             );
           })}
         </nav>
@@ -871,7 +926,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
             aria-current={active?.href === n.href ? "page" : undefined}
             className={cn(active?.href === n.href && "active")}
           >
-            <NavIcon item={n} />
+            <span className="nav-icon">
+              <NavGlyph item={n} />
+            </span>
             <span className="sr-only">{n.name}</span>
           </Link>
         ))}

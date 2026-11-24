@@ -271,7 +271,7 @@ test.describe("guest entry", () => {
     await page.getByRole("button", { name: "Finish setup" }).click();
     await expect(page).toHaveURL("http://127.0.0.1:3100/");
     await expect(
-      page.getByText("Meet the speed you need"),
+      page.getByText("What can I take off your hands Today?"),
     ).toBeVisible();
     await page.goto("/playground");
     await expect(page).toHaveURL(/\/playground$/);

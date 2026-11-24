@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <defs>
+    <linearGradient id="glass" x1="8" y1="5" x2="41" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EAF2FF"/>
+      <stop offset=".18" stop-color="#B8C5D6"/>
+      <stop offset=".48" stop-color="#6F7A8C"/>
+      <stop offset=".76" stop-color="#232C3A"/>
+      <stop offset="1" stop-color="#0B0F18"/>
+    </linearGradient>
+    <linearGradient id="glassDeep" x1="10" y1="8" x2="40" y2="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8D9AAD"/>
+      <stop offset=".32" stop-color="#3B4657"/>
+      <stop offset=".72" stop-color="#151C27"/>
+      <stop offset="1" stop-color="#0B0F18"/>
+    </linearGradient>
+    <linearGradient id="glassMid" x1="9" y1="7" x2="40" y2="43" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#DDE7F3"/>
+      <stop offset=".22" stop-color="#96A3B5"/>
+      <stop offset=".55" stop-color="#4A5565"/>
+      <stop offset=".82" stop-color="#1A2230"/>
+      <stop offset="1" stop-color="#0B0F18"/>
+    </linearGradient>
+    <linearGradient id="outline" x1="8" y1="6" x2="41" y2="43" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EAF2FF"/>
+      <stop offset=".32" stop-color="#B7C4D4"/>
+      <stop offset=".68" stop-color="#6F7A8C"/>
+      <stop offset="1" stop-color="#80BFFF" stop-opacity=".58"/>
+    </linearGradient>
+    <linearGradient id="faceTop" x1="15" y1="8" x2="34" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C8D4E3" stop-opacity=".62"/>
+      <stop offset="1" stop-color="#6F7A8C" stop-opacity=".16"/>
+    </linearGradient>
+    <linearGradient id="faceLeft" x1="9" y1="14" x2="24" y2="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6F7A8C" stop-opacity=".38"/>
+      <stop offset="1" stop-color="#0B0F18" stop-opacity=".7"/>
+    </linearGradient>
+    <linearGradient id="faceRight" x1="25" y1="14" x2="41" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2A3443" stop-opacity=".8"/>
+      <stop offset="1" stop-color="#0B0F18" stop-opacity=".92"/>
+    </linearGradient>
+    <linearGradient id="iceFace" x1="26" y1="23" x2="38" y2="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#80BFFF" stop-opacity=".42"/>
+      <stop offset="1" stop-color="#80BFFF" stop-opacity=".1"/>
+    </linearGradient>
+  </defs>
+<g>
+    <rect x="13.4" y="7.6" width="21.4" height="16.6" rx="2.2" transform="rotate(-2 24 16)" fill="url(#glassDeep)" stroke="url(#outline)" stroke-width="1.5"/>
+    <rect x="17.4" y="10.2" width="20.6" height="15.8" rx="2.2" transform="rotate(2 27.7 18)" fill="url(#glassDeep)" stroke="url(#outline)" stroke-width="1.5"/>
+    <g stroke="url(#outline)" stroke-opacity=".45" stroke-width="1.2" stroke-linecap="round">
+      <path d="M21.2 14.8h9.2M21.8 17.8h7.2M20.4 20.8h5.8"/>
+    </g>
+    <path d="M5.4 15.2h12l3 3.2h18.2c1.3 0 2.2 1 2.2 2.2v14.1c0 1.4-1 2.4-2.4 2.4H7.6c-1.4 0-2.4-1-2.4-2.4V17.2c0-1.1.9-2 2-2Z" fill="url(#glass)" stroke="url(#outline)" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M6.8 22.2h34.4" stroke="url(#outline)" stroke-width="1.1" stroke-opacity=".45"/>
+    <path d="M6.8 15.8h9.8" stroke="#80BFFF" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M9.2 18.8h31.2" stroke="#EAF2FF" stroke-width="1" stroke-opacity=".16"/>
+  </g>
+</svg>

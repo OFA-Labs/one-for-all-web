@@ -58,7 +58,7 @@ async function expectOriginalCopy(page: Page) {
     "ONE FOR ALL",
   );
   await expect(hero(page).locator(".ofa-hero-heading")).toHaveText(
-    "Meet the speed you need",
+    "What can I take off your hands Today?",
   );
   await expect(
     hero(page).getByRole("button", { name: "Tap to speak", exact: true }),
