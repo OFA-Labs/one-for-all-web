@@ -12,6 +12,7 @@ import { ArrowDown, AudioLines, BookOpen, Play, Square } from "lucide-react";
 import { statusToOrb, type OrbState } from "@/lib/demo";
 import { useApp } from "@/app/providers/app-provider";
 import { Assistant } from "./assistant";
+import { HeroComposer } from "./hero-composer";
 import { Reader } from "./reader";
 import { VoiceVideo } from "@/components/common";
 import { HomeVideo } from "./home-video";
@@ -179,7 +180,9 @@ export function OFA({ initialMode = "ask" }: { initialMode?: "ask" | "read" }) {
         </nav>
         <div className="ofa-hero-center">
           <p className="ofa-hero-kicker">ONE FOR ALL</p>
-          <h2 className="ofa-hero-heading">Meet the speed you need</h2>
+          <h2 className="ofa-hero-heading">
+            What can I take off your hands Today?
+          </h2>
           <button
             className="ofa-hero-speak"
             aria-pressed={heroOrbActive}
@@ -197,6 +200,7 @@ export function OFA({ initialMode = "ask" }: { initialMode?: "ask" | "read" }) {
             <span className="sr-only">Open workspace</span>
           </a>
         </div>
+        <HeroComposer />
       </section>
 
       <section

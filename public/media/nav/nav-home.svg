@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <defs>
+    <linearGradient id="glass" x1="8" y1="5" x2="41" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EAF2FF"/>
+      <stop offset=".18" stop-color="#B8C5D6"/>
+      <stop offset=".48" stop-color="#6F7A8C"/>
+      <stop offset=".76" stop-color="#232C3A"/>
+      <stop offset="1" stop-color="#0B0F18"/>
+    </linearGradient>
+    <linearGradient id="glassDeep" x1="10" y1="8" x2="40" y2="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8D9AAD"/>
+      <stop offset=".32" stop-color="#3B4657"/>
+      <stop offset=".72" stop-color="#151C27"/>
+      <stop offset="1" stop-color="#0B0F18"/>
+    </linearGradient>
+    <linearGradient id="glassMid" x1="9" y1="7" x2="40" y2="43" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#DDE7F3"/>
+      <stop offset=".22" stop-color="#96A3B5"/>
+      <stop offset=".55" stop-color="#4A5565"/>
+      <stop offset=".82" stop-color="#1A2230"/>
+      <stop offset="1" stop-color="#0B0F18"/>
+    </linearGradient>
+    <linearGradient id="outline" x1="8" y1="6" x2="41" y2="43" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EAF2FF"/>
+      <stop offset=".32" stop-color="#B7C4D4"/>
+      <stop offset=".68" stop-color="#6F7A8C"/>
+      <stop offset="1" stop-color="#80BFFF" stop-opacity=".58"/>
+    </linearGradient>
+    <linearGradient id="faceTop" x1="15" y1="8" x2="34" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C8D4E3" stop-opacity=".62"/>
+      <stop offset="1" stop-color="#6F7A8C" stop-opacity=".16"/>
+    </linearGradient>
+    <linearGradient id="faceLeft" x1="9" y1="14" x2="24" y2="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6F7A8C" stop-opacity=".38"/>
+      <stop offset="1" stop-color="#0B0F18" stop-opacity=".7"/>
+    </linearGradient>
+    <linearGradient id="faceRight" x1="25" y1="14" x2="41" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2A3443" stop-opacity=".8"/>
+      <stop offset="1" stop-color="#0B0F18" stop-opacity=".92"/>
+    </linearGradient>
+    <linearGradient id="iceFace" x1="26" y1="23" x2="38" y2="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#80BFFF" stop-opacity=".42"/>
+      <stop offset="1" stop-color="#80BFFF" stop-opacity=".1"/>
+    </linearGradient>
+  </defs>
+<path d="M18.19 6.75L17.15 7.1L15.94 8.14L14.72 7.27L13.86 7.27L12.99 7.62L11.95 8.66L11.08 8.31L9.7 8.31L8.48 8.66L7.18 9.96L6.84 11L6.84 13.08L7.36 14.29L8.48 15.59L9.87 15.94L12.82 17.67L14.46 19.49L14.64 20.01L15.33 20.71L15.33 21.23L16.37 22.79L17.41 25.21L19.32 27.81L20.19 29.72L21.23 30.93L21.92 32.49L22.27 32.67L22.61 33.71L23.83 35.1L24 35.79L25.39 37.35L26.25 38.91L28.07 40.9L29.11 41.25L30.85 40.9L31.28 40.64L31.63 39.95L31.97 37.7L31.8 37.18L31.97 34.4L31.54 31.19L32.58 32.06L33.97 32.76L37.61 36.05L37.96 36.22L40.04 36.05L40.82 35.1L40.82 34.23L41.16 33.36L40.99 32.84L41.16 29.2L40.99 27.99L40.47 26.77L39.34 25.82L36.92 25.99L36.14 26.95L36.14 28.68L35.88 28.77L32.41 25.65L29.81 23.74L29.11 22.87L28.42 22.53L26.17 20.27L24.95 19.58L23.13 17.24L22.96 16.55L21.92 14.98L22.79 11.34L22.79 10.48L22.44 9.96L22.44 9.09L22.09 8.22L21.49 7.62L20.45 7.1L18.19 6.75ZM18.19 9.52L17.24 9.96L17.15 11.95L18.89 11.95L19.49 11.34L19.49 10.3L19.15 9.78L18.19 9.52ZM11.6 10.56L10.82 11.52L11 12.38L11.78 12.99L12.99 12.82L13.25 12.56L12.38 11.69L12.21 10.65L11.6 10.56ZM22.01 22.87L21.92 23.65L22.96 25.91L25.56 29.2L25.56 29.55L26.77 30.93L27.55 32.41L27.64 30.93L28.07 30.33L30.41 30.07L28.25 27.55L26.51 26.51L23.57 23.57L22.53 22.87L22.01 22.87Z" fill="url(#glassDeep)" fill-rule="evenodd" stroke="url(#outline)" stroke-width="1.5" stroke-linejoin="round"/>
+  <circle cx="12.04" cy="11.78" r="1.4" stroke="#80BFFF" stroke-width="1.2"/>
+</svg>

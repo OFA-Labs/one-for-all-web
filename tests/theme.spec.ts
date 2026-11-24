@@ -29,9 +29,9 @@ const THEMES: Theme[] = [
     caption: "White + Grey + Black",
     canvas: "rgb(255, 255, 255)",
     sidebar: "rgb(247, 247, 247)",
-    card: "rgb(166, 166, 166)",
-    inner: "rgb(23, 23, 23)",
-    innerText: "rgb(255, 255, 255)",
+    card: "rgb(23, 23, 23)",
+    inner: "rgb(166, 166, 166)",
+    innerText: "rgb(23, 23, 23)",
   },
 ];
 

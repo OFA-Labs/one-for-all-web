@@ -121,7 +121,7 @@ test("the compact icon navigation hides labels and shows names on hover and focu
   ]) {
     const link = navigation.getByRole("link", { name, exact: true });
     await expect(link).toBeVisible();
-    expect((await link.boundingBox())!.height).toBeCloseTo(54, 1);
+    expect((await link.boundingBox())!.height).toBeCloseTo(64, 1);
     // The accessible section name takes no space alongside its icon.
     const label = link.locator(".sr-only");
     expect((await label.boundingBox())!.width).toBeLessThanOrEqual(1);
@@ -130,7 +130,7 @@ test("the compact icon navigation hides labels and shows names on hover and focu
     links.map((link) => {
       const box = link.getBoundingClientRect();
       const artwork = link
-        .querySelector(".nav-icon-slot")!
+        .querySelector(".nav-icon")!
         .getBoundingClientRect();
       return {
         x: box.x,
@@ -143,12 +143,12 @@ test("the compact icon navigation hides labels and shows names on hover and focu
     }),
   );
   for (const [index, slot] of slots.entries()) {
-    expect(slot.width).toBeCloseTo(54, 1);
-    expect(slot.height).toBeCloseTo(54, 1);
+    expect(slot.width).toBeCloseTo(64, 1);
+    expect(slot.height).toBeCloseTo(64, 1);
     expect(slot.x).toBeCloseTo(slots[0].x, 1);
     expect(slot.axis).toBeCloseTo(slots[0].axis, 1);
-    expect(slot.artwork).toBeCloseTo(34, 1);
-    if (index > 0) expect(slot.y - slots[index - 1].y).toBeCloseTo(62, 1);
+    expect(slot.artwork).toBeCloseTo(48, 1);
+    if (index > 0) expect(slot.y - slots[index - 1].y).toBeCloseTo(72, 1);
   }
   const settingsSlots = await page
     .locator(".sidebar-lower .nav-link")
@@ -159,25 +159,26 @@ test("the compact icon navigation hides labels and shows names on hover and focu
       }),
     );
   for (const slot of settingsSlots) {
-    expect(slot.width).toBeCloseTo(54, 1);
-    expect(slot.height).toBeCloseTo(54, 1);
+    expect(slot.width).toBeCloseTo(64, 1);
+    expect(slot.height).toBeCloseTo(64, 1);
     expect(slot.x).toBeCloseTo(slots[0].x, 1);
   }
   const home = navigation.getByRole("link", { name: "Home", exact: true });
   await expect(home.locator("img")).toHaveAttribute(
     "src",
-    "/media/home-relaxing.webp",
+    "/media/nav/nav-home.svg",
   );
   await expect(
     navigation
       .getByRole("link", { name: "e-brain", exact: true })
       .locator("img"),
-  ).toHaveAttribute("src", "/media/e-brain-mark-v2.png");
+  ).toHaveAttribute("src", "/media/nav/nav-brain.svg");
   for (const [name, source] of [
-    ["Watchers", "/media/watchers-folder.png"],
-    ["Connections", "/media/connections-plugs.webp"],
+    ["Playground", "/media/nav/nav-playground.svg"],
+    ["Watchers", "/media/nav/nav-watchers.svg"],
+    ["History", "/media/nav/nav-history.svg"],
+    ["Connections", "/media/nav/nav-connections.png"],
     ["Settings", "/media/settings-gears.webp"],
-    ["History", "/media/history-plugins.webp"],
   ]) {
     await expect(
       page
@@ -211,7 +212,7 @@ test("opening e-brain shows the supplied mark, section title, and purpose", asyn
     page.getByRole("heading", { name: "e-brain", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".page-title p")).toHaveText(
-    "A home for the knowledge and context your assistant can use.",
+    "Shared memory for Claude Code, Codex and the voice agent.",
   );
   const artwork = page.getByRole("img", {
     name: "e-brain: a brain inside the letter e",
@@ -262,7 +263,7 @@ test("mobile navigation uses icons and keeps the resting engine after switching 
     quickNavigation
       .getByRole("link", { name: "Home", exact: true })
       .locator("img"),
-  ).toHaveAttribute("src", "/media/home-relaxing.webp");
+  ).toHaveAttribute("src", "/media/nav/nav-home.svg");
   await page
     .getByRole("button", { name: "Open navigation", exact: true })
     .click();

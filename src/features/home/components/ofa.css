@@ -189,6 +189,85 @@
 .workspace-visible .ofa-enter-workspace {
   visibility: hidden;
 }
+/* Chat entry point nested inside the hero's lower arc. */
+.ofa-hero-chat {
+  position: absolute;
+  left: 50%;
+  top: 73%;
+  transform: translateX(-50%);
+  z-index: 2;
+  width: min(400px, calc(100% - 40px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+}
+.ofa-hero-chat-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 7px 7px 10px;
+  border: 1px solid var(--t-border);
+  border-radius: 999px;
+  background: var(--t-card);
+  box-shadow: 0 14px 44px var(--t-shadow);
+}
+.ofa-hero-chat-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 2px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--t-text);
+  font: inherit;
+  font-size: 14px;
+}
+.ofa-hero-chat-form input::placeholder {
+  color: var(--t-text-muted);
+}
+.ofa-hero-chat-new,
+.ofa-hero-chat-send {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.ofa-hero-chat-new {
+  background: transparent;
+  color: var(--t-text-muted);
+}
+.ofa-hero-chat-new:hover {
+  background: var(--t-active);
+  color: var(--t-text);
+}
+.ofa-hero-chat-send {
+  background: var(--t-accent);
+  color: var(--t-accent-text);
+}
+.ofa-hero-chat-send:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.ofa-hero-chat-new:focus-visible,
+.ofa-hero-chat-send:focus-visible {
+  outline: 2px solid var(--t-accent);
+  outline-offset: 2px;
+}
+.ofa-hero-chat-note {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  color: var(--t-hero-text);
+  font-size: 10px;
+  opacity: 0.75;
+}
 .ofa-workspace {
   scroll-margin-top: 0;
 }
