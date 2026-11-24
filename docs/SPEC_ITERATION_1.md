@@ -280,7 +280,7 @@ Phone view: orb, transcript, cards and live tabs.
 
 #### B4.3 Top-level sections
 
-The website's top-level navigation is **Home**, **Playground**, **History**, **Watchers**, **Arc Reactor** and **e-brain**. Both use their own images as section icons. **e-brain** remains an intentionally blank placeholder: its page renders no content. The shared shell (navigation, header and footer) wraps both routes.
+The website's top-level navigation is **Home**, **Playground**, **History**, **Watchers**, **Arc Reactor** and **e-brain**. Both use their own images as section icons. **e-brain** shows the shared project memory (EXPERIMENTAL): a capacity meter, what it can and can't do, known flaws, per-item status with provenance, and human confirm/split, approve and resolve actions. All numbers come from `GET /v1/ebrain/limits`. The shared shell (navigation, header and footer) wraps both routes.
 
 **Arc Reactor** reuses the "bring your own brain for hard tasks" onboarding block, renamed to the arc reactor: a dormant/active status card, an example tough request, and a notice that the real activation flow is still open backend work. The reactor starts inactive — its picture is still and faded in the section and in the nav icon, clearly showing it is not working. Clicking the orb in the section, the activation button, or the small toggle beside the nav item starts it: the still picture is replaced by the same smooth, infinite orb video that runs on the hero — in the section and at nav-icon size — with a soft glow around it. This is a local preview only — no model, key, account or request is sent. The flag is in-memory preview state, cleared by "Reset local demo" or a reload.
 
