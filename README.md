@@ -57,6 +57,13 @@ On Windows, `scripts/setup.ps1` does all of the above, plus the Python tooling v
 
 With `NEXT_PUBLIC_EBRAIN_API_URL` unset, e-brain uses local preview fixtures and makes no API requests. To connect to the local E-Brain service, set `NEXT_PUBLIC_EBRAIN_API_URL` to its loopback URL and `NEXT_PUBLIC_EBRAIN_TOKEN` to the intended user's token, then rebuild. These `NEXT_PUBLIC_` values are visible to the browser; configure them only for your own local session, not a shared deployment. The API accepts the local web origins on ports 3000 and 3100. `.env.example` lists these names and the optional `ONE_FOR_ALL_PREVIEW_URL` used by `scripts/review.mjs`.
 
+Claude Code's project hooks and the Codex instructions in `AGENTS.md` use the
+sibling API repo's pinned Python venv for E-Brain memory. Set the intended
+agent's `EBRAIN_AGENT_TOKEN` and optional `EBRAIN_URL` in that agent's process;
+the API must be running. SessionStart loads context and Stop captures marked
+assistant decisions before maintenance. An unavailable service gives an empty
+pack, so work continues. See the [API bridge and bootstrap setup](https://github.com/OFA-Labs/one-for-all-api#agent-bridges-m2).
+
 ## Project structure
 
 ```text

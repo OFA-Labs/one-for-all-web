@@ -2,5 +2,31 @@
   "attribution": {
     "commit": "One For All\n\nCo-Authored-By: One For All <noreply@one-for-all.local>",
     "pr": "![One For All — Team SIX7](docs/assets/team-six7.png)\n\n**One For All**"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "command": "Push-Location -LiteralPath \"$env:CLAUDE_PROJECT_DIR/../one-for-all-api\" -ErrorAction Stop; try { & ./.venv/Scripts/python.exe -m ebrain pack --hook } finally { Pop-Location }",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "command": "Push-Location -LiteralPath \"$env:CLAUDE_PROJECT_DIR/../one-for-all-api\" -ErrorAction Stop; try { & ./.venv/Scripts/python.exe -m ebrain capture --hook; & ./.venv/Scripts/python.exe -m ebrain maintain } finally { Pop-Location }",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
   }
 }
