@@ -127,7 +127,7 @@ export function FlagButton({ id, label }: { id: string; label?: string }) {
   );
 }
 // 20% faster than the source clip, applied before the first frame is shown.
-const ORB_PLAYBACK_RATE = 1.2;
+const ORB_PLAYBACK_RATE = 3;
 export function VoiceVideo({
   state = "Idle",
   compact = false,

@@ -101,6 +101,17 @@ docs/                   Handoff, design, coverage and historical reports
 - `components/`, `lib/`, `hooks/` and `config/` never import from `features/`.
 - No circular dependencies and no orphan modules.
 
+## Caps Lock agent extension (preview)
+
+`extension/` is a Chrome (Manifest V3) extension that opens the ONE FOR ALL agent on any website.
+
+- **Open/close:** press Caps Lock twice quickly (within 0.4 s). Esc also closes it.
+- **Cue:** a short glowing ring appears at the top centre, then the agent panel slides in below the address bar.
+- **Panel:** the liquid orb animation, a message box, voice input (🎤, browser speech recognition) and read-aloud (🔊, the selection or the page).
+- **Limits:** replies are preview text until a backend exists. Chrome does not run extensions on `chrome://` pages or the Chrome Web Store.
+
+Install locally: open `chrome://extensions`, turn on Developer mode, click **Load unpacked** and choose the `extension/` folder.
+
 ## Deploy
 
 The site deploys to **Vercel** with the default Next.js preset:
