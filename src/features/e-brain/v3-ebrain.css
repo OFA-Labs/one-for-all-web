@@ -1,0 +1,222 @@
+/* Additive V3 preview styles. Only v3- prefixed classes are declared here so
+ * existing E-Brain surfaces keep their current design. */
+
+.v3-answer-panel,
+.v3-review-panel,
+.v3-plan,
+.v3-receipts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.v3-answer-body,
+.v3-review-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.v3-preview-note,
+.v3-honesty {
+  color: var(--t-text-muted);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.v3-meta {
+  display: grid;
+  grid-template-columns: minmax(9rem, 14rem) minmax(0, 1fr);
+  gap: 6px 14px;
+  margin: 0;
+  min-width: 0;
+}
+
+.v3-meta-row {
+  display: contents;
+}
+
+.v3-meta dt {
+  color: var(--t-text-muted);
+  font-weight: 600;
+}
+
+.v3-meta dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.v3-badge {
+  display: inline-flex;
+  flex-wrap: wrap;
+}
+
+.v3-status,
+.v3-summary,
+.v3-loading {
+  color: var(--t-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.v3-status {
+  border-left: 3px solid var(--t-border-strong);
+  padding-left: 10px;
+}
+
+.v3-loading {
+  font-style: italic;
+}
+
+.v3-error {
+  border: 1px solid var(--t-border-strong);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--t-raised);
+  overflow-wrap: anywhere;
+}
+
+.v3-error button,
+.v3-review-actions button,
+.v3-preview-bar button {
+  cursor: pointer;
+}
+
+.v3-error button:disabled,
+.v3-review-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.v3-list,
+.v3-fact-list,
+.v3-receipt-list,
+.v3-source-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.v3-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--t-text-muted);
+}
+
+.v3-fact-list,
+.v3-receipt-list,
+.v3-source-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.v3-fact,
+.v3-receipt-item {
+  border: 1px solid var(--t-border);
+  border-radius: 8px;
+  padding: 10px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.v3-fact-details summary {
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.v3-fact-predicate {
+  font-weight: 600;
+}
+
+.v3-fact-sub {
+  margin-top: 10px;
+}
+
+.v3-receipt-item,
+.v3-source-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: baseline;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.v3-source-list li {
+  border-top: 1px solid var(--t-inner-border);
+  padding-top: 8px;
+}
+
+.v3-digest,
+.v3-url,
+.v3-excerpt {
+  color: var(--t-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.v3-review-actions,
+.v3-preview-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.v3-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.v3-preview-banner {
+  border: 1px solid var(--t-border-strong);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--t-raised);
+  overflow-wrap: anywhere;
+}
+
+.v3-preview-scenarios {
+  color: var(--t-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.v3-rejection {
+  border: 1px solid var(--t-border-strong);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--t-raised);
+}
+
+:where(.v3-preview button, .v3-fact-details summary, .v3-error button):focus-visible {
+  outline: 2px solid var(--t-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .v3-meta {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .v3-meta dd {
+    margin-bottom: 8px;
+  }
+}
+
+/* Additive schema-3 section on the real /e-brain route (local opt-in only). */
+.v3-route-panel { margin-top: 1.5rem; padding: 1rem; }
+.v3-route-panel label { display: block; margin: 0.5rem 0; font-size: 0.85rem; }
+.v3-route-panel input { display: block; width: 100%; max-width: 28rem; margin-top: 0.25rem; padding: 0.4rem 0.5rem; }
+.v3-route-panel button:focus-visible, .v3-route-panel input:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
