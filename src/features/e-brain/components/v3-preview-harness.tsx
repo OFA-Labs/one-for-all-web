@@ -316,3 +316,163 @@ const PROPOSAL = {
     stage: "ack",
     items: [
       {
+        op_id: "op-prop-7",
+        committed_seq: null,
+        transition: "unknown",
+        stage: "ack",
+        processing_url: "/ebrain/ops/op-prop-7",
+        request_digest: DIGEST,
+        replay_marker: null,
+        acknowledged_at: OBSERVED,
+        client_reported_use_at: null,
+        projection_lag: false,
+      },
+    ],
+  },
+};
+
+const LIMITS = {
+  schema: 3,
+  plan_revision: "plan-4",
+  mode: "company",
+  tier: "company-config-50k",
+  scope: "org-preview/space-main/engineering",
+  active_facts: 412,
+  reserved: 6,
+  capacity_label: "50,000 facts (config capacity)",
+  evidence_status: "unmeasured",
+  capacity_measured: false,
+  price: null,
+  budgets: {
+    events: { used: null, limit: 10000, measured: false },
+    bytes: { used: null, limit: 100000000, measured: false },
+    jobs: { used: null, limit: 100, measured: false },
+    rate: { used: null, limit: 60, measured: false },
+    api: { used: null, limit: 1000, measured: false },
+    export: { used: null, limit: 10, measured: false },
+  },
+  legacy_event_count: 5000,
+};
+
+type ScenarioKey =
+  | "mixed"
+  | "pending"
+  | "conflict"
+  | "unknown"
+  | "malformed"
+  | "error"
+  | "loading";
+
+const SCENARIOS: readonly { key: ScenarioKey; label: string }[] = [
+  { key: "mixed", label: "Load mixed" },
+  { key: "pending", label: "Load pending" },
+  { key: "conflict", label: "Load conflict" },
+  { key: "unknown", label: "Load unknown" },
+  { key: "malformed", label: "Load malformed" },
+  { key: "error", label: "Load error" },
+  { key: "loading", label: "Simulate loading" },
+];
+
+const ANSWER_WIRES: Record<ScenarioKey, unknown> = {
+  mixed: MIXED_ANSWER,
+  pending: PENDING_ANSWER,
+  conflict: CONFLICT_ANSWER,
+  unknown: UNKNOWN_ANSWER,
+  malformed: MALFORMED_ANSWER,
+  error: MIXED_ANSWER,
+  loading: MIXED_ANSWER,
+};
+
+export function V3PreviewHarness() {
+  const [scenario, setScenario] = useState<ScenarioKey>("mixed");
+  const [previewAuthority, setPreviewAuthority] = useState(false);
+  const [reviewStatus, setReviewStatus] = useState<string | null>(null);
+
+  const answerResult = guardV3Answer(ANSWER_WIRES[scenario]);
+  const errorResult = guardV3Error(ERROR_PAYLOAD);
+  const proposalResult = guardV3Proposal(PROPOSAL);
+  const limitsResult = guardV3Limits(LIMITS);
+
+  const loading = scenario === "loading";
+  const error = scenario === "error" && errorResult.ok ? errorResult.value : null;
+  const answer =
+    !loading && error === null && answerResult.ok ? answerResult.value : null;
+  const rejection =
+    !loading && error === null && !answerResult.ok ? answerResult.reason : null;
+
+  function retry() {
+    setScenario("mixed");
+    setReviewStatus(null);
+  }
+
+  function queued(action: string, id: string, digest: string) {
+    setReviewStatus(
+      `Preview ${action} request queued for ${id} at digest ${digest}; no server action was run.`,
+    );
+  }
+
+  return (
+    <section className="v3-preview" aria-label="V3 preview harness">
+      <div className="v3-preview-banner" role="note">
+        <strong>PREVIEW — E-Brain V3 web slice</strong>
+        <p>
+          Synthetic mock fixtures only. No live service, no secrets and no
+          authorization from localStorage. Approval authority below is a
+          preview-only prop, not a real grant.
+        </p>
+      </div>
+      <div className="v3-preview-bar" role="group" aria-label="Preview scenarios">
+        {SCENARIOS.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            aria-pressed={scenario === item.key}
+            onClick={() => {
+              setScenario(item.key);
+              setReviewStatus(null);
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          aria-pressed={previewAuthority}
+          onClick={() => setPreviewAuthority(!previewAuthority)}
+        >
+          {previewAuthority
+            ? "Revoke preview authority"
+            : "Grant preview authority"}
+        </button>
+      </div>
+      <p className="v3-preview-scenarios">Selected scenario: {scenario}</p>
+
+      {rejection !== null && (
+        <div className="v3-rejection" role="alert">
+          Rejected unsafe V3 answer payload: {rejection} No Current badge was
+          rendered from it.
+        </div>
+      )}
+
+      <V3AnswerPanel
+        answer={answer}
+        loading={loading}
+        error={error}
+        onRetry={retry}
+      />
+      <V3ReviewPanel
+        proposal={proposalResult.ok ? proposalResult.value : null}
+        limits={limitsResult.ok ? limitsResult.value : null}
+        reviewer={
+          previewAuthority
+            ? { authority: "schema3.review.approve", canReview: true }
+            : null
+        }
+        status={reviewStatus}
+        onApprove={(id, digest) => queued("approval", id, digest)}
+        onReject={(id, digest) => queued("rejection", id, digest)}
+        onRetry={retry}
+      />
+    </section>
+  );
+}
