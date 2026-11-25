@@ -117,3 +117,63 @@ test("keyboard access and ARIA regions work", async ({ page }) => {
   await expect(
     harness.getByRole("region", { name: "V3 answer" }),
   ).toBeVisible();
+  await expect(
+    harness.getByRole("region", { name: "Receipts" }).first(),
+  ).toBeVisible();
+  await expect(harness.getByRole("status").first()).toBeVisible();
+
+  const pendingButton = harness.getByRole("button", { name: "Load pending" });
+  await pendingButton.focus();
+  await expect(pendingButton).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(
+    harness.getByText("Pending verification — not current").first(),
+  ).toBeVisible();
+
+  const summary = harness.locator(".v3-fact-details summary").first();
+  await summary.focus();
+  await expect(summary).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(harness.locator(".v3-fact-details").first()).toHaveAttribute(
+    "open",
+    "",
+  );
+});
+
+test("loading, error and retry states are exposed", async ({ page }) => {
+  let harness = await load(page, "Simulate loading");
+  await expect(harness.getByText(/Loading validated V3 payload/).first()).toBeVisible();
+
+  harness = await load(page, "Load error");
+  await expect(harness.getByRole("alert")).toContainText("unavailable");
+  await harness.getByRole("button", { name: "Retry" }).first().click();
+  await expect(harness.getByText("Current", { exact: true }).first()).toBeVisible();
+});
+
+test("preview slice has no axe violations", async ({ page }) => {
+  await open(page);
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(results.violations).toEqual([]);
+});
+
+// Traceability alias for M07 in TRACEABILITY.csv.
+test("M07_states_and_accessibility", async ({ page }) => {
+  let harness = await load(page, "Simulate loading");
+  await expect(harness.getByText(/Loading validated V3 payload/).first()).toBeVisible();
+
+  harness = await load(page, "Load pending");
+  await expect(harness.getByText("Pending verification — not current").first()).toBeVisible();
+  expect(await harness.getByText("Current", { exact: true }).count()).toBe(0);
+
+  harness = await load(page, "Load conflict");
+  await expect(harness.getByText("Conflict — not current").first()).toBeVisible();
+  expect(await harness.getByText("Current", { exact: true }).count()).toBe(0);
+
+  await open(page);
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(results.violations).toEqual([]);
+});
