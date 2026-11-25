@@ -157,3 +157,162 @@ const MIXED_FACTS = [
     freshness: freshness("current"),
     provenance: [source("otp-doc")],
     alternatives: [
+      {
+        fact_id: "fact-conflict-alt",
+        value: { kind: "number", value: 4 },
+        provenance: source("otp-alt-doc"),
+        annotation: "Alternative from a second source.",
+      },
+    ],
+    claim_annotation: null,
+  },
+  {
+    fact_id: "fact-withdrawn",
+    predicate: "old API host",
+    state: "withdrawn",
+    current_value: null,
+    intended_value: null,
+    observed_value: null,
+    confidence: confidence(0, "unknown", "unknown"),
+    freshness: freshness("unknown", null, null, "unknown"),
+    provenance: [],
+    alternatives: [],
+    claim_annotation: "Withdrawn by a reviewed decision.",
+  },
+  {
+    fact_id: "fact-unknown",
+    predicate: "billing contact",
+    state: "unknown",
+    current_value: null,
+    intended_value: null,
+    observed_value: null,
+    confidence: confidence(0, "unknown", "unknown"),
+    freshness: freshness("unknown", null, null, "unknown"),
+    provenance: [],
+    alternatives: [],
+    claim_annotation: null,
+  },
+];
+
+const MIXED_ANSWER = {
+  schema: 3,
+  answer_status: "partial",
+  question: "What do we know about auth and deployment?",
+  summary:
+    "A partial answer: one approved value is current, one source is stale, and several facts cannot be treated as current.",
+  intended_decision: "Use the approved 30-minute TTL.",
+  observed_value: "Some sources still show a different TTL.",
+  facts: MIXED_FACTS,
+  degradation: {
+    level: "partial",
+    reasons: ["index lag on one source"],
+    omitted_facets: ["history"],
+    index_lag: true,
+    pending_included: true,
+  },
+  snapshot: SNAPSHOT,
+  scope: SCOPE,
+  confidence: confidence(0.6, "moderate"),
+  freshness: freshness("stale", OBSERVED, 8, "projection"),
+  receipts: SENT_RECEIPTS,
+  cursor: CURSOR,
+  error: null,
+};
+
+const PENDING_ANSWER = {
+  ...MIXED_ANSWER,
+  answer_status: "pending",
+  summary: "No scalar current value is claimed while verification is pending.",
+  intended_decision: "Use 45 minutes after verification.",
+  observed_value: "45 minutes was observed but not verified.",
+  facts: [
+    {
+      ...MIXED_FACTS[2],
+      predicate: "session expiry (pending)",
+      freshness: freshness("unknown", null, null, "unknown"),
+    },
+    MIXED_FACTS[5],
+  ],
+  degradation: {
+    level: "severe",
+    reasons: ["verification pending"],
+    omitted_facets: ["history", "conflicts"],
+    index_lag: false,
+    pending_included: true,
+  },
+  receipts: GENERATED_RECEIPTS,
+};
+
+const CONFLICT_ANSWER = {
+  ...MIXED_ANSWER,
+  answer_status: "ambiguous",
+  summary: "Two sources disagree; no scalar current value is available.",
+  intended_decision: null,
+  observed_value: "8 and 4 were both observed.",
+  facts: [MIXED_FACTS[3], MIXED_FACTS[5]],
+  degradation: {
+    level: "severe",
+    reasons: ["conflict between sources"],
+    omitted_facets: ["history"],
+    index_lag: false,
+    pending_included: false,
+  },
+};
+
+const UNKNOWN_ANSWER = {
+  ...MIXED_ANSWER,
+  answer_status: "partial",
+  summary: "The requested fact has no established state.",
+  intended_decision: null,
+  observed_value: null,
+  facts: [MIXED_FACTS[5]],
+  degradation: {
+    level: "partial",
+    reasons: ["state unknown"],
+    omitted_facets: [],
+    index_lag: false,
+    pending_included: false,
+  },
+};
+
+/** Deliberately unsafe: a pending fact carrying a scalar current value. */
+const MALFORMED_ANSWER = {
+  ...MIXED_ANSWER,
+  facts: [
+    {
+      ...MIXED_FACTS[2],
+      current_value: { kind: "string", value: "45 minutes" },
+    },
+    ...MIXED_FACTS.slice(1),
+  ],
+};
+
+const ERROR_PAYLOAD = {
+  code: "unavailable",
+  message: "Schema-3 service is unavailable. Nothing was changed.",
+  request_id: "req-503-preview",
+  retryable: true,
+};
+
+const PROPOSAL = {
+  proposal_id: "prop-7",
+  version: 3,
+  digest: DIGEST,
+  status: "pending",
+  action: "Demote the superseded TTL claim",
+  targets: ["fact-current"],
+  evidence: [source("proposal-evidence")],
+  preconditions: ["Snapshot knowledge_seq must still be 42"],
+  impact: "Changes which value may be shown as current after approval.",
+  expires_at: "2026-12-01T00:00:00Z",
+  steward_queue: "engineering-stewards",
+  reviewer_authority: "schema3.review.approve",
+  separation_of_duties: true,
+  receipts: {
+    generated: true,
+    sent: true,
+    ack: "verified",
+    client_reported_use: false,
+    stage: "ack",
+    items: [
+      {
