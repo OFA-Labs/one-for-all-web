@@ -146,3 +146,151 @@ function V3ReviewBody({
     reviewer !== null &&
     reviewer !== undefined &&
     reviewer.canReview &&
+    reviewer.authority === proposal.reviewer_authority &&
+    proposal.status !== "stale" &&
+    proposal.status !== "approved" &&
+    proposal.status !== "rejected";
+  const canAct = authorityOk && !busy;
+
+  return (
+    <div className="v3-review-body">
+      <dl className="v3-meta" aria-label="Proposal summary">
+        <V3Meta label="Proposal">{proposal.proposal_id}</V3Meta>
+        <V3Meta label="Version">{proposal.version}</V3Meta>
+        <V3Meta label="Digest">
+          <code className="v3-digest">{proposal.digest}</code>
+        </V3Meta>
+        <V3Meta label="Status">
+          <V3Badge
+            label={proposalStatusText(proposal.status)}
+            tone={proposalTone(proposal.status)}
+          />
+        </V3Meta>
+        <V3Meta label="Action">{proposal.action}</V3Meta>
+        <V3Meta label="Impact">{proposal.impact}</V3Meta>
+        <V3Meta label="Expiry">{proposal.expires_at}</V3Meta>
+        <V3Meta label="Steward queue">{proposal.steward_queue}</V3Meta>
+        <V3Meta label="Required authority">
+          {proposal.reviewer_authority}
+        </V3Meta>
+        <V3Meta label="Separation of duties">
+          {proposal.separation_of_duties ? "Enforced" : "Not recorded"}
+        </V3Meta>
+        <V3Meta label="Viewer authority">
+          {reviewer === null || reviewer === undefined
+            ? "Not established"
+            : reviewer.authority}
+        </V3Meta>
+      </dl>
+
+      <h3>Targets</h3>
+      <ul className="v3-list">
+        {proposal.targets.map((target) => (
+          <li key={target}>
+            <code>{target}</code>
+          </li>
+        ))}
+      </ul>
+
+      <h3>Evidence</h3>
+      <ul className="v3-source-list">
+        {proposal.evidence.map((source) => (
+          <li key={`${source.source_id}-${source.revision}`}>
+            <code>{source.source_id}</code>
+            <span>revision {source.revision}</span>
+            <span className="v3-digest">digest {source.digest}</span>
+            <span>{source.kind}</span>
+          </li>
+        ))}
+      </ul>
+
+      <h3>Preconditions</h3>
+      <ul className="v3-list">
+        {proposal.preconditions.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+
+      <V3Receipts receipts={proposal.receipts} />
+
+      <h3>Review action</h3>
+      <V3Status>
+        {authorityOk
+          ? "Authority established for this preview session."
+          : "Authority not established — approval disabled. A server session must supply it; a localStorage role is not evidence."}
+      </V3Status>
+      {status !== null && <V3Status>{status}</V3Status>}
+      {busy && <V3LoadingState />}
+      <p className="v3-honesty">
+        These buttons only send a request. The server rechecks authority,
+        digest and expiry before any change; hiding a button is not enforcement.
+      </p>
+      <div className="v3-review-actions">
+        <button
+          type="button"
+          disabled={!canAct || onApprove === undefined}
+          onClick={() => onApprove?.(proposal.proposal_id, proposal.digest)}
+        >
+          Approve proposal
+        </button>
+        <button
+          type="button"
+          disabled={!canAct || onReject === undefined}
+          onClick={() => onReject?.(proposal.proposal_id, proposal.digest)}
+        >
+          Reject proposal
+        </button>
+      </div>
+
+      {limits !== null && <PlanUsage limits={limits} />}
+    </div>
+  );
+}
+
+export function V3ReviewPanel({
+  proposal,
+  limits,
+  reviewer = null,
+  loading = false,
+  busy = false,
+  error = null,
+  status = null,
+  onApprove,
+  onReject,
+  onRetry,
+}: V3ReviewPanelProps) {
+  return (
+    <section
+      className="panel v3-review-panel"
+      aria-labelledby="v3-review-title"
+      aria-busy={loading || busy}
+    >
+      <h2 id="v3-review-title">V3 proposal review</h2>
+      <V3PreviewNote />
+      {loading && <V3LoadingState />}
+      {!loading && error !== null && (
+        <V3ErrorState error={error} onRetry={onRetry} />
+      )}
+      {!loading && error === null && proposal === null && limits === null && (
+        <V3Status>No validated proposal or limits document to display.</V3Status>
+      )}
+      {!loading &&
+        error === null &&
+        proposal !== null && (
+          <V3ReviewBody
+            proposal={proposal}
+            limits={limits}
+            reviewer={reviewer}
+            busy={busy}
+            status={status}
+            onApprove={onApprove}
+            onReject={onReject}
+          />
+        )}
+      {!loading &&
+        error === null &&
+        proposal === null &&
+        limits !== null && <PlanUsage limits={limits} />}
+    </section>
+  );
+}
