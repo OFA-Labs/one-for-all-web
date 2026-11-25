@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "ONE FOR ALL Agent",
+  "version": "0.1.0",
+  "description": "Press Caps Lock twice on any site to open the ONE FOR ALL agent.",
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["media/orb.mp4", "media/orb-poster.webp"],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ]
+}
