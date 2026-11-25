@@ -89,3 +89,94 @@ function FactItem({
           <V3Meta label="Approved sources">
             {fact.provenance.length === 0 ? "None" : fact.provenance.length}
           </V3Meta>
+        </dl>
+        {fact.alternatives.length > 0 && (
+          <div className="v3-fact-sub">
+            <h4>Conflicts and alternatives</h4>
+            <ul className="v3-source-list">
+              {fact.alternatives.map((alternative) => (
+                <li key={alternative.fact_id}>
+                  <code>{alternative.fact_id}</code>
+                  <span>{scalarText(alternative.value)}</span>
+                  <span>{factStateText(fact.state)}</span>
+                  <span className="v3-digest">
+                    digest {alternative.provenance.digest}
+                  </span>
+                  {alternative.annotation !== null && (
+                    <span>{alternative.annotation}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {fact.provenance.length > 0 && (
+          <div className="v3-fact-sub">
+            <h4>Approved sources</h4>
+            <ul className="v3-source-list">
+              {fact.provenance.map((source) => (
+                <li key={`${source.source_id}-${source.revision}`}>
+                  <code>{source.source_id}</code>
+                  <span>revision {source.revision}</span>
+                  <span className="v3-digest">digest {source.digest}</span>
+                  <span>
+                    span{" "}
+                    {source.span === null
+                      ? "unknown"
+                      : `${source.span.start}–${source.span.end}`}
+                  </span>
+                  <span>{source.kind}</span>
+                  {source.excerpt !== null && (
+                    <span className="v3-excerpt">{source.excerpt}</span>
+                  )}
+                  {source.annotation !== null && (
+                    <span>{source.annotation}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </details>
+    </li>
+  );
+}
+
+function V3AnswerBody({ answer }: { answer: V3Answer }) {
+  return (
+    <div className="v3-answer-body">
+      <dl className="v3-meta" aria-label="Answer summary">
+        <V3Meta label="Answer status">
+          <V3Badge
+            label={answerStatusText(answer.answer_status)}
+            tone={answerTone(answer.answer_status)}
+          />
+        </V3Meta>
+        <V3Meta label="Intended decision">
+          {answer.intended_decision ?? "None stated"}
+        </V3Meta>
+        <V3Meta label="Observed value">
+          {answer.observed_value ?? "None observed"}
+        </V3Meta>
+        <V3Meta label="Retrieval confidence">
+          {confidenceText(answer.confidence)}
+        </V3Meta>
+        <V3Meta label="Source freshness">
+          {freshnessText(answer.freshness)}
+        </V3Meta>
+        <V3Meta label="Scope">{scopeKey(answer.scope)}</V3Meta>
+      </dl>
+      <V3Status>
+        Completeness: {answerStatusText(answer.answer_status)} · degradation{" "}
+        {answer.degradation.level} ·{" "}
+        {answer.degradation.index_lag
+          ? "index lag present"
+          : "no index lag reported"}
+      </V3Status>
+      <p className="v3-summary">{answer.summary}</p>
+
+      <h3>Completeness and degradation</h3>
+      <dl className="v3-meta">
+        <V3Meta label="Degradation level">{answer.degradation.level}</V3Meta>
+        <V3Meta label="Index lag">
+          {answer.degradation.index_lag
