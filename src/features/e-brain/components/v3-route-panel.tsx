@@ -75,3 +75,81 @@ const freshness = (state: string | undefined): Freshness => ({
 const facts = (payload: BackendAnswer): V3Fact[] =>
   (payload.items ?? []).map((item) => {
     const provenance: Provenance[] = (item.provenance ?? []).map((p) => ({
+      source_id: String(p.source_id ?? "unknown"),
+      revision: String(p.revision ?? "unknown"),
+      digest: String(p.digest ?? ""),
+      span: p.span && typeof p.span.start === "number" && typeof p.span.end === "number"
+        ? { start: p.span.start, end: p.span.end }
+        : null,
+      excerpt: null,
+      kind: "first_party",
+      annotation: null,
+    }));
+    return {
+      fact_id: String(item.fact_id ?? "unknown"),
+      predicate: String(item.key?.predicate ?? "unknown"),
+      state: (item.state ?? "unknown") as V3Fact["state"],
+      current_value: item.state === "current" && item.current_value != null
+        ? scalar(item.current_value)
+        : null,
+      intended_value: null,
+      observed_value: null,
+      confidence: confidence(Number(item.confidence ?? 0)),
+      freshness: freshness(item.freshness),
+      provenance,
+      alternatives: [],
+      claim_annotation: null,
+    };
+  });
+
+const toV3Answer = (payload: BackendAnswer, question: string, scope: {
+  org_id: string; space_id: string; namespace: string;
+}): V3Answer | null => {
+  const snap = payload.snapshot ?? {};
+  const snapshot: Snapshot = {
+    org_id: String(snap.org_id ?? scope.org_id),
+    knowledge_seq: Number(snap.knowledge_seq ?? 0),
+    valid_at: snap.valid_at ?? null,
+    time_known: Boolean(snap.valid_at),
+    identity_generation: String(snap.identity_generation ?? 1),
+    policy_version: String(snap.policy_version ?? "1"),
+    auth_epoch: String(snap.auth_epoch ?? 0),
+    retrieval_generation: snap.retrieval_generation ?? null,
+    model_generation: snap.model_generation ?? null,
+  };
+  const reasons = payload.degradation ?? [];
+  const degradation: Degradation = {
+    level: reasons.length === 0 ? "none" : reasons.includes("unavailable") ? "unavailable" : "partial",
+    reasons,
+    omitted_facets: payload.completeness ?? [],
+    index_lag: reasons.includes("index_lag"),
+    pending_included: reasons.includes("pending_included"),
+  };
+  const receipts: ReceiptEnvelope = {
+    generated: (payload.receipts?.length ?? 0) > 0,
+    sent: false,
+    ack: "unknown",
+    client_reported_use: false,
+    stage: "unknown",
+    items: (payload.receipts ?? []).map((r) => ({
+      op_id: String(r.op_id ?? "unknown"),
+      committed_seq: typeof r.knowledge_seq === "number" ? r.knowledge_seq : null,
+      transition: (String(r.status ?? "unknown") as ReceiptEnvelope["items"][number]["transition"]),
+      stage: "unknown",
+      processing_url: typeof r.processing_url === "string" ? r.processing_url : null,
+      request_digest: String(r.request_digest ?? ""),
+      replay_marker: null,
+      acknowledged_at: null,
+      client_reported_use_at: null,
+      projection_lag: false,
+    })),
+  };
+  const candidate = {
+    schema: 3 as const,
+    answer_status: payload.answer_status,
+    question,
+    summary: `${(payload.items ?? []).length} authorized fact(s) at snapshot ${snapshot.knowledge_seq}`,
+    intended_decision: null,
+    observed_value: null,
+    facts: facts(payload),
+    degradation,
