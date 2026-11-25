@@ -8,6 +8,8 @@ The current milestone is the local deterministic browser/Windows execution found
 
 Start at `one-for-all-api/docs/local-execution/README.md`. Its `contracts.py` and local API provide the future frontend boundary: capability discovery, typed/structured plans, task snapshots/progress, structural observations, questions, approvals, errors and pause/resume/cancel/stop/Continue. Model providers supply plans later; the separate voice pipeline supplies final transcripts/control signals later. Neither integration can bypass the single gate or replace readback verification.
 
+See [LOCAL_EXECUTION_CONTRACT.md](LOCAL_EXECUTION_CONTRACT.md) for current endpoints, request examples, task/card/control semantics and the future voice/model seams. The companion feature PRs target the `staging` branch in both OFA-Labs repositories.
+
 Do not show successful AI reasoning from fixture execution. Do not expose a local API credential in a public frontend bundle or add production pairing/auth claims. Local credentials are session-generated, not product identity. Production remote integration requires its own reviewed security work.
 
 This branch adds only this feature handoff to the web repository; the implementation and real-hand tests are in the matching API branch. Existing unrelated web changes must not be included in the feature PR.
