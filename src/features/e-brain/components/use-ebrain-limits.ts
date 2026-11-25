@@ -8,7 +8,10 @@ export type LimitsState =
   | { state: "error"; baseUrl: string; error: unknown }
   | { state: "ready"; data: Limits };
 
-export function useEBrainLimits(client: EBrainClient): LimitsState {
+export function useEBrainLimits(
+  client: EBrainClient,
+  revision = 0,
+): LimitsState {
   const [state, setState] = useState<LimitsState>({ state: "loading" });
 
   useEffect(() => {
@@ -21,7 +24,7 @@ export function useEBrainLimits(client: EBrainClient): LimitsState {
     return () => {
       live = false;
     };
-  }, [client]);
+  }, [client, revision]);
 
   return state;
 }

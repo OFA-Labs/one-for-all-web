@@ -5,7 +5,13 @@ import { useState } from "react";
 import { PageTitle, Pill } from "@/components/common";
 import { getEBrainClient } from "@/lib/ebrain/client";
 import { CapacityMeter } from "./capacity-meter";
+import { EBrainEmpty, EBrainError, EBrainLoading } from "./ebrain-states";
+import { HealState } from "./heal-state";
+import { HonestyPanel } from "./honesty-panel";
+import { MemoryList } from "./memory-list";
+import { PairsReview } from "./pairs-review";
 import { useEBrainLimits } from "./use-ebrain-limits";
+import { V3RoutePanel } from "./v3-route-panel";
 import "../e-brain.css";
 
 function EBrainArtwork() {
@@ -28,7 +34,8 @@ function EBrainArtwork() {
 
 export function EBrain() {
   const [client] = useState(getEBrainClient);
-  const limits = useEBrainLimits(client);
+  const [revision, setRevision] = useState(0);
+  const limits = useEBrainLimits(client, revision);
 
   return (
     <>
@@ -41,18 +48,34 @@ export function EBrain() {
           ) : undefined
         }
       />
-      {limits.state === "loading" && (
-        <p className="ebrain-loading" aria-busy="true">
-          Loading memory…
-        </p>
-      )}
+      {limits.state === "loading" && <EBrainLoading />}
       {limits.state === "error" && (
-        <p role="alert">
-          E-Brain service is not reachable at {limits.baseUrl}. Nothing was
-          changed.
-        </p>
+        <EBrainError
+          baseUrl={limits.baseUrl}
+          onRetry={() => setRevision((current) => current + 1)}
+        />
       )}
-      {limits.state === "ready" && <CapacityMeter limits={limits.data} />}
+      {limits.state === "ready" && (
+        <>
+          <CapacityMeter limits={limits.data} />
+          <HealState limits={limits.data} client={client} />
+          <HonestyPanel
+            capabilities={limits.data.capabilities}
+            flaws={limits.data.known_flaws}
+            source={limits.data.measured_source}
+          />
+          <PairsReview
+            client={client}
+            enabled={limits.data.subject_join === "on"}
+          />
+          <MemoryList
+            client={client}
+            capacityState={limits.data.capacity_state}
+          />
+          {limits.data.memory_count === 0 && <EBrainEmpty />}
+        </>
+      )}
+      {process.env.NEXT_PUBLIC_EBRAIN_V3 === "1" && <V3RoutePanel />}
       <EBrainArtwork />
     </>
   );

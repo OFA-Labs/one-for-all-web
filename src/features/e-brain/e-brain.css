@@ -6,3 +6,81 @@
 .ebrain-meter p {
   color: var(--t-text-muted);
 }
+
+.ebrain-honesty,
+.ebrain-memory,
+.ebrain-heal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ebrain-cap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: 16px;
+}
+
+.ebrain-cap-list,
+.ebrain-memory-list,
+.ebrain-versions,
+.ebrain-heal-list,
+.ebrain-legend ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.ebrain-cap-list,
+.ebrain-legend ul {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ebrain-memory-row,
+.ebrain-heal-list li,
+.ebrain-versions li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ebrain-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ebrain-memory-head,
+.ebrain-memory-head small {
+  display: block;
+  min-width: 0;
+}
+
+.ebrain-measured,
+.ebrain-source,
+.ebrain-memory-head small,
+.ebrain-versions small {
+  color: var(--t-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.ebrain-versions code {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .ebrain-cap-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ebrain-panel {
+    min-height: 320px;
+  }
+}
