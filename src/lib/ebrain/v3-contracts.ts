@@ -526,3 +526,268 @@ export function isDegradation(input: unknown): input is Degradation {
     !Array.isArray(input.reasons) ||
     input.reasons.length > 20 ||
     !input.reasons.every((reason) => isText(reason, 300))
+  ) {
+    return false;
+  }
+  if (
+    !Array.isArray(input.omitted_facets) ||
+    input.omitted_facets.length > 20 ||
+    !input.omitted_facets.every((facet) => isText(facet, 300))
+  ) {
+    return false;
+  }
+  return isBoolean(input.index_lag) && isBoolean(input.pending_included);
+}
+
+export function isSnapshot(input: unknown): input is Snapshot {
+  if (!isRecord(input)) return false;
+  if (!isText(input.org_id, 200)) return false;
+  if (!isInteger(input.knowledge_seq)) return false;
+  if (!isBoolean(input.time_known)) return false;
+  if (input.time_known) {
+    if (!isIsoInstant(input.valid_at)) return false;
+  } else if (input.valid_at !== null) {
+    return false;
+  }
+  if (!isText(input.identity_generation, 200)) return false;
+  if (!isText(input.policy_version, 200)) return false;
+  if (!isText(input.auth_epoch, 200)) return false;
+  if (!isNullableText(input.retrieval_generation, 200)) return false;
+  return isNullableText(input.model_generation, 200);
+}
+
+export function isScope(input: unknown): input is Scope {
+  if (!isRecord(input)) return false;
+  return (
+    isText(input.org_id, 200) &&
+    isText(input.space_id, 200) &&
+    isText(input.namespace, 200)
+  );
+}
+
+export function scopeKey(scope: Scope): string {
+  return `${scope.org_id}/${scope.space_id}/${scope.namespace}`;
+}
+
+export function isReceiptStatus(input: unknown): input is ReceiptStatus {
+  if (!isRecord(input)) return false;
+  if (!isText(input.op_id, 200)) return false;
+  if (input.committed_seq !== null && !isInteger(input.committed_seq)) return false;
+  if (!isOneOf(input.transition, TRANSITIONS)) return false;
+  if (!isOneOf(input.stage, STAGES)) return false;
+  if (!isProcessingUrl(input.processing_url)) return false;
+  if (!isDigest(input.request_digest)) return false;
+  if (!isNullableText(input.replay_marker, 200)) return false;
+  if (!isNullableIso(input.acknowledged_at)) return false;
+  if (!isNullableIso(input.client_reported_use_at)) return false;
+  if (!isBoolean(input.projection_lag)) return false;
+  if (input.stage === "ack" && input.acknowledged_at === null) return false;
+  if (
+    input.stage === "client_reported_use" &&
+    (input.acknowledged_at === null || input.client_reported_use_at === null)
+  ) {
+    return false;
+  }
+  return true;
+}
+
+export function isReceiptEnvelope(input: unknown): input is ReceiptEnvelope {
+  if (!isRecord(input)) return false;
+  if (!isBoolean(input.generated) || !isBoolean(input.sent)) return false;
+  if (!isOneOf(input.ack, ACK_STATES)) return false;
+  if (!isBoolean(input.client_reported_use)) return false;
+  if (!isOneOf(input.stage, STAGES)) return false;
+  if (
+    !Array.isArray(input.items) ||
+    input.items.length > 100 ||
+    !input.items.every(isReceiptStatus)
+  ) {
+    return false;
+  }
+  switch (input.stage) {
+    case "generated":
+      return !input.sent && !input.client_reported_use && input.ack === "unknown";
+    case "sent":
+      return (
+        input.generated && !input.client_reported_use && input.ack === "unknown"
+      );
+    case "ack":
+      return (
+        input.generated &&
+        input.sent &&
+        input.ack === "verified" &&
+        !input.client_reported_use
+      );
+    case "client_reported_use":
+      return (
+        input.generated &&
+        input.sent &&
+        input.ack === "verified" &&
+        input.client_reported_use
+      );
+    case "unknown":
+      return (
+        !input.generated && !input.sent && !input.client_reported_use && input.ack === "unknown"
+      );
+    default:
+      return false;
+  }
+}
+
+export function isCursor(input: unknown): input is Cursor {
+  if (!isRecord(input)) return false;
+  if (!isText(input.scope, 300) || !isText(input.value, 1000)) return false;
+  if (!isInteger(input.knowledge_seq)) return false;
+  return isNullableIso(input.expires_at);
+}
+
+export function isV3Error(input: unknown): input is V3Error {
+  if (!isRecord(input)) return false;
+  if (!isOneOf(input.code, ERROR_CODES)) return false;
+  if (!isText(input.message, 1000)) return false;
+  if (!isText(input.request_id, 200)) return false;
+  return isBoolean(input.retryable);
+}
+
+export function isV3Answer(input: unknown): input is V3Answer {
+  if (!isRecord(input)) return false;
+  if (input.schema !== 3) return false;
+  if (!isOneOf(input.answer_status, ANSWER_STATUSES)) return false;
+  if (!isText(input.question, 1000) || !isText(input.summary, MAX_TEXT)) return false;
+  if (!isNullableText(input.intended_decision, 1000)) return false;
+  if (!isNullableText(input.observed_value, 1000)) return false;
+  if (
+    !Array.isArray(input.facts) ||
+    input.facts.length > 100 ||
+    !input.facts.every(isV3Fact)
+  ) {
+    return false;
+  }
+  if (!isDegradation(input.degradation)) return false;
+  if (!isSnapshot(input.snapshot)) return false;
+  if (!isScope(input.scope)) return false;
+  if (!isConfidence(input.confidence)) return false;
+  if (!isFreshness(input.freshness)) return false;
+  if (!isReceiptEnvelope(input.receipts)) return false;
+  if (input.cursor !== null && !isCursor(input.cursor)) return false;
+  if (input.error !== null && !isV3Error(input.error)) return false;
+  if (input.error !== null && input.answer_status !== "unavailable") return false;
+  // A pending/not_found answer must not silently flatten into current facts.
+  if (
+    (input.answer_status === "pending" || input.answer_status === "not_found") &&
+    input.facts.some((fact) => isRecord(fact) && fact.state === "current")
+  ) {
+    return false;
+  }
+  if (
+    isRecord(input.cursor) &&
+    isRecord(input.scope) &&
+    isScope(input.scope) &&
+    input.cursor.scope !== scopeKey(input.scope)
+  ) {
+    return false;
+  }
+  return true;
+}
+
+export function isV3Proposal(input: unknown): input is V3Proposal {
+  if (!isRecord(input)) return false;
+  if (!isText(input.proposal_id, 200)) return false;
+  if (!isInteger(input.version, 1)) return false;
+  if (!isDigest(input.digest)) return false;
+  if (!isOneOf(input.status, PROPOSAL_STATUSES)) return false;
+  if (!isText(input.action, 500)) return false;
+  if (!isText(input.impact, MAX_TEXT)) return false;
+  if (!isIsoInstant(input.expires_at)) return false;
+  if (!isText(input.steward_queue, 300)) return false;
+  if (!isText(input.reviewer_authority, 300)) return false;
+  if (!isBoolean(input.separation_of_duties)) return false;
+  if (
+    !Array.isArray(input.targets) ||
+    input.targets.length > 50 ||
+    !input.targets.every((target) => isText(target, 300))
+  ) {
+    return false;
+  }
+  if (
+    !Array.isArray(input.evidence) ||
+    input.evidence.length > 50 ||
+    !input.evidence.every(isProvenance)
+  ) {
+    return false;
+  }
+  if (
+    !Array.isArray(input.preconditions) ||
+    input.preconditions.length > 50 ||
+    !input.preconditions.every((item) => isText(item, 500))
+  ) {
+    return false;
+  }
+  return input.receipts === null || isReceiptEnvelope(input.receipts);
+}
+
+function isBudget(input: unknown): input is V3Budget {
+  if (!isRecord(input)) return false;
+  if (!isBoolean(input.measured)) return false;
+  if (input.used !== null && !isInteger(input.used)) return false;
+  if (input.limit !== null && !isInteger(input.limit)) return false;
+  // An unmeasured budget must not display an invented usage number.
+  if (!input.measured && (input.used !== null || input.limit === null)) return false;
+  return true;
+}
+
+export function isV3Limits(input: unknown): input is V3Limits {
+  if (!isRecord(input)) return false;
+  if (input.schema !== 3) return false;
+  if (!isText(input.plan_revision, 200)) return false;
+  if (!isOneOf(input.mode, PLAN_MODES)) return false;
+  if (!isText(input.tier, 200) || !isText(input.scope, 300)) return false;
+  if (!isInteger(input.active_facts) || !isInteger(input.reserved)) return false;
+  if (!isText(input.capacity_label, 300)) return false;
+  if (!isOneOf(input.evidence_status, EVIDENCE_STATUSES)) return false;
+  if (!isBoolean(input.capacity_measured)) return false;
+  if (
+    input.capacity_measured &&
+    input.evidence_status !== "measured"
+  ) {
+    return false;
+  }
+  if (input.legacy_event_count !== null && !isInteger(input.legacy_event_count))
+    return false;
+  if (input.price !== null) {
+    if (!isRecord(input.price)) return false;
+    if (!isBoundedNumber(input.price.amount, 0, 1e12)) return false;
+    if (!isText(input.price.currency, 3) || !/^[A-Z]{3}$/.test(input.price.currency))
+      return false;
+  }
+  if (!isRecord(input.budgets)) return false;
+  const budgetKeys = ["events", "bytes", "jobs", "rate", "api", "export"];
+  for (const key of budgetKeys) {
+    if (!isBudget(input.budgets[key])) return false;
+  }
+  return true;
+}
+
+export function guardV3Answer(input: unknown): GuardResult<V3Answer> {
+  return isV3Answer(input)
+    ? { ok: true, value: input }
+    : { ok: false, reason: "Payload is not a valid schema-3 answer." };
+}
+
+export function guardV3Proposal(input: unknown): GuardResult<V3Proposal> {
+  return isV3Proposal(input)
+    ? { ok: true, value: input }
+    : { ok: false, reason: "Payload is not a valid schema-3 proposal." };
+}
+
+export function guardV3Limits(input: unknown): GuardResult<V3Limits> {
+  return isV3Limits(input)
+    ? { ok: true, value: input }
+    : { ok: false, reason: "Payload is not a valid schema-3 limits document." };
+}
+
+export function guardV3Error(input: unknown): GuardResult<V3Error> {
+  return isV3Error(input)
+    ? { ok: true, value: input }
+    : { ok: false, reason: "Payload is not a valid schema-3 error." };
+}
