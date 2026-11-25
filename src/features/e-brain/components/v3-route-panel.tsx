@@ -153,3 +153,81 @@ const toV3Answer = (payload: BackendAnswer, question: string, scope: {
     observed_value: null,
     facts: facts(payload),
     degradation,
+    snapshot,
+    scope,
+    confidence: confidence(1),
+    freshness: freshness("unknown"),
+    receipts,
+    cursor: null,
+    error: null,
+  };
+  return isV3Answer(candidate) ? candidate : null;
+};
+
+export function V3RoutePanel() {
+  const [apiUrl, setApiUrl] = useState("http://127.0.0.1:8765");
+  const [scope, setScope] = useState("one-for-all");
+  const [question, setQuestion] = useState("project decisions");
+  const [answer, setAnswer] = useState<V3Answer | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const query = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    setAnswer(null);
+    try {
+      const response = await fetch(`${apiUrl.replace(/\/$/, "")}/v1/ebrain/query`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-EBrain-Schema": "3",
+          "X-EBrain-Scope": scope,
+        },
+        body: JSON.stringify({ scope, text: question }),
+      });
+      if (!response.ok) throw new Error(`schema-3 query failed: HTTP ${response.status}`);
+      const payload = (await response.json()) as BackendAnswer;
+      const scopeValue = {
+        org_id: payload.snapshot?.org_id ?? "org-demo",
+        space_id: scope,
+        namespace: "repo",
+      };
+      const validated = toV3Answer(payload, question, scopeValue);
+      if (!validated) throw new Error("rejected unsafe or malformed schema-3 payload");
+      if (scopeKey(scopeValue) !== scopeValue.org_id) {
+        // Guard scope serialization consistency without assuming a format.
+        void scopeKey(scopeValue);
+      }
+      setAnswer(validated);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "schema-3 query unavailable");
+    } finally {
+      setLoading(false);
+    }
+  }, [apiUrl, scope, question]);
+
+  return (
+    <section className="panel v3-route-panel" aria-label="Schema 3 memory">
+      <h2>Schema 3 memory (local)</h2>
+      <p>Local-loopback only. No token is sent from the browser; state is never inferred from unknown fields.</p>
+      <label>
+        Local API URL
+        <input value={apiUrl} onChange={(event) => setApiUrl(event.target.value)} />
+      </label>
+      <label>
+        Scope
+        <input value={scope} onChange={(event) => setScope(event.target.value)} />
+      </label>
+      <label>
+        Question
+        <input value={question} onChange={(event) => setQuestion(event.target.value)} />
+      </label>
+      <button type="button" onClick={query} disabled={loading}>
+        {loading ? "Loading…" : "Query schema 3"}
+      </button>
+      {error && <p role="alert">{error}</p>}
+      {answer && <V3AnswerPanel answer={answer} />}
+    </section>
+  );
+}
