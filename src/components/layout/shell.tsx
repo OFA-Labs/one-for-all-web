@@ -19,7 +19,6 @@ import {
   Code2,
   Command,
   Menu,
-  Monitor,
   PanelLeftClose,
   PanelLeftOpen,
   Plug,
@@ -83,12 +82,6 @@ const nav: NavItem[] = [
 ];
 
 const settingsNav: NavItem[] = [
-  {
-    href: "/ofa",
-    name: "OFA Desktop",
-    icon: Monitor,
-    iconSize: 26,
-  },
   {
     href: "/connections",
     name: "Connections",
