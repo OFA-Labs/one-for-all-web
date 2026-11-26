@@ -1317,29 +1317,33 @@ Module: History. Spec: B4.1, B7.5–6.
 Revisit what happened and distinguish verified from merely submitted or unknown.
 
 ### Frontend implementation
-- Sample searchable/filterable/sortable/paginated history
-- Task detail, illustrative ledger and download of sample summary
+- Preview: sample calendar with in-memory search/status filters and a local sample summary
+- Live (opt-in, same-origin /api/history proxy): server-driven day/week/month/year calendar, read-only audit record and export
 
 ### Backend implementation required
-- Owner-scoped cursor pagination and task/evidence retrieval
-- Store idempotent side-effect ledger and immutable approval audit
-- Private artifact access with 7-day screenshot retention
+- Implemented in backend/history (read model + service-only ingest); the task engine that writes real history is still future work
+- Owner-scoped list/period/calendar/detail/export with civil-date ranges in an IANA zone and filter-bound cursors
+- Idempotent side-effect ledger and immutable approval audit stored per task revision
+- Not yet built: private artifacts with 7-day screenshot retention, all-tasks list view, delete-my-data
 
 ### Data requirements
-Task ID, goal, timestamps, state, attempt, tier, created item ID/link, gate reason and snapshot hash; cursor/total.
+Task ID, goal, timestamps, state, attempt, tier, created item ID/link, gate reason and snapshot hash; next_cursor/total. Wire format is snake_case; task ids are unique per user.
 
 ### Proposed API contract
 `GET /v1/tasks`
 
-Authentication: Member; strict owner scoping
+Authentication: Member bearer token; strict owner scoping (a service token writes via POST /v1/tasks)
 
 Request example:
 
 ```json
 {
-  "status": "completed",
+  "status": "Verified",
+  "tz": "Asia/Kolkata",
+  "from": "2026-11-01",
+  "to": "2026-12-01",
   "cursor": null,
-  "limit": 10
+  "limit": 20
 }
 ```
 
@@ -1348,7 +1352,7 @@ Response example:
 ```json
 {
   "items": [],
-  "nextCursor": null,
+  "next_cursor": null,
   "total": 0
 }
 ```
@@ -1357,14 +1361,17 @@ Response example:
 - intent never blindly retried; inspect first
 - D evidence never counts; Tier A links only
 - Submitted, not yet confirmed is distinct from verified
+- Day/week/month views use GET /v1/history/period (capped, flags truncated); dots use GET /v1/history/calendar
+- Another user's task id returns 404, never 403
 
 ### Expected frontend behavior and acceptance
 Show accurate server statuses, empty/error states and chronological audit.
 
 ### Errors and edge cases to test
 - Unauthorized task ID
-- Expired screenshot
-- Cursor invalid or disconnected
+- Expired screenshot (not yet built)
+- Cursor invalid, tampered or reused with different filters
+- Invalid time zone or date range
 
 ## settings.save — Preferences, profile facts and budgets
 
@@ -1782,6 +1789,61 @@ The UI completes the simulated flow in an in-app target. Native behavior remains
 - Simulated mic/connection/keyboard availability errors
 - Closed, elevated and password targets
 - Stale results, cancellation and interrupted preview recovery
+
+## ebrain.memory — E-Brain shared memory (experimental)
+
+Module: e-brain. Spec: B4.3 (amended), B7.1 Memory, FINAL/03-interfaces.md.
+
+### Purpose
+Show what the shared project memory holds, how reliable it is, and let a human confirm, approve or undo changes.
+
+### Frontend implementation
+- Capacity meter with ok, near-limit and beyond-tested-range states read from /v1/ebrain/limits
+- Can/can't panel, known flaws, status badges, provenance drawer, heal approvals and same-fact review
+
+### Backend implementation required
+- FastAPI service one-for-all-api/ebrain on 127.0.0.1:8765 over a per-user SQLite store
+- Bearer-token identity; T8 visibility enforced in SQL; human-only routes for resolve, approve, pairs and rollback
+
+### Data requirements
+Accepted memory writes per user and project (value, agent, authority, provenance, supersedes, ts); heal proposals; same-fact links. Secrets are redacted before storage.
+
+### Proposed API contract
+`GET /v1/ebrain/limits`
+
+Authentication: Bearer token mapped to user and agent by EBRAIN_TOKENS
+
+Request example:
+
+```json
+{
+  "project": "one-for-all"
+}
+```
+
+Response example:
+
+```json
+{
+  "memory_count": 412,
+  "capacity_hard": 1000,
+  "capacity_state": "ok",
+  "heal_mode": "propose",
+  "subject_join": "off"
+}
+```
+
+### Business rules and permissions
+- Every number and sentence on the page comes from /v1/ebrain/limits
+- Self-heal is approval-required by default; nothing is merged automatically
+- Above 1,000 memories every answer is labelled beyond tested range
+
+### Expected frontend behavior and acceptance
+The e-brain page shows the capacity meter, honest limits and the current memory with provenance.
+
+### Errors and edge cases to test
+- 401 missing or unknown token
+- Service unreachable: the page says nothing was changed and offers Retry
 
 ## Unproven infrastructure / operations
 All 15 prep-week trial items in E1 remain unrun: extension lifetime, concurrency, background frames, tripwire, upload, real-site challenge rate, phone frame latency, store review, 4G transport, India–EU latency, Gradium session limit, Hinglish transcription selection, Sheets permission, Windows Companion hook, and Nanobrowser adaptation. E2 source claims require primary-source verification.

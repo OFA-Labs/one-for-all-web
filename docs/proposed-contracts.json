@@ -968,40 +968,47 @@
       "spec": "B4.1, B7.5–6",
       "purpose": "Revisit what happened and distinguish verified from merely submitted or unknown.",
       "frontend": [
-        "Sample searchable/filterable/sortable/paginated history",
-        "Task detail, illustrative ledger and download of sample summary"
+        "Preview: sample calendar with in-memory search/status filters and a local sample summary",
+        "Live (opt-in, same-origin /api/history proxy): server-driven day/week/month/year calendar, read-only audit record and export"
       ],
       "backend": [
-        "Owner-scoped cursor pagination and task/evidence retrieval",
-        "Store idempotent side-effect ledger and immutable approval audit",
-        "Private artifact access with 7-day screenshot retention"
+        "Implemented in backend/history (read model + service-only ingest); the task engine that writes real history is still future work",
+        "Owner-scoped list/period/calendar/detail/export with civil-date ranges in an IANA zone and filter-bound cursors",
+        "Idempotent side-effect ledger and immutable approval audit stored per task revision",
+        "Not yet built: private artifacts with 7-day screenshot retention, all-tasks list view, delete-my-data"
       ],
-      "data": "Task ID, goal, timestamps, state, attempt, tier, created item ID/link, gate reason and snapshot hash; cursor/total.",
+      "data": "Task ID, goal, timestamps, state, attempt, tier, created item ID/link, gate reason and snapshot hash; next_cursor/total. Wire format is snake_case; task ids are unique per user.",
       "api": {
         "method": "GET",
         "path": "/v1/tasks",
-        "auth": "Member; strict owner scoping",
+        "auth": "Member bearer token; strict owner scoping (a service token writes via POST /v1/tasks)",
         "request": {
-          "status": "completed",
+          "status": "Verified",
+          "tz": "Asia/Kolkata",
+          "from": "2026-11-01",
+          "to": "2026-12-01",
           "cursor": null,
-          "limit": 10
+          "limit": 20
         },
         "response": {
           "items": [],
-          "nextCursor": null,
+          "next_cursor": null,
           "total": 0
         }
       },
       "rules": [
         "intent never blindly retried; inspect first",
         "D evidence never counts; Tier A links only",
-        "Submitted, not yet confirmed is distinct from verified"
+        "Submitted, not yet confirmed is distinct from verified",
+        "Day/week/month views use GET /v1/history/period (capped, flags truncated); dots use GET /v1/history/calendar",
+        "Another user's task id returns 404, never 403"
       ],
       "success": "Show accurate server statuses, empty/error states and chronological audit.",
       "errors": [
         "Unauthorized task ID",
-        "Expired screenshot",
-        "Cursor invalid or disconnected"
+        "Expired screenshot (not yet built)",
+        "Cursor invalid, tampered or reused with different filters",
+        "Invalid time zone or date range"
       ]
     },
     {
@@ -1322,6 +1329,47 @@
         "Simulated mic/connection/keyboard availability errors",
         "Closed, elevated and password targets",
         "Stale results, cancellation and interrupted preview recovery"
+      ]
+    },
+    {
+      "id": "ebrain.memory",
+      "name": "E-Brain shared memory (experimental)",
+      "module": "e-brain",
+      "spec": "B4.3 (amended), B7.1 Memory, FINAL/03-interfaces.md",
+      "purpose": "Show what the shared project memory holds, how reliable it is, and let a human confirm, approve or undo changes.",
+      "frontend": [
+        "Capacity meter with ok, near-limit and beyond-tested-range states read from /v1/ebrain/limits",
+        "Can/can't panel, known flaws, status badges, provenance drawer, heal approvals and same-fact review"
+      ],
+      "backend": [
+        "FastAPI service one-for-all-api/ebrain on 127.0.0.1:8765 over a per-user SQLite store",
+        "Bearer-token identity; T8 visibility enforced in SQL; human-only routes for resolve, approve, pairs and rollback"
+      ],
+      "data": "Accepted memory writes per user and project (value, agent, authority, provenance, supersedes, ts); heal proposals; same-fact links. Secrets are redacted before storage.",
+      "api": {
+        "method": "GET",
+        "path": "/v1/ebrain/limits",
+        "auth": "Bearer token mapped to user and agent by EBRAIN_TOKENS",
+        "request": {
+          "project": "one-for-all"
+        },
+        "response": {
+          "memory_count": 412,
+          "capacity_hard": 1000,
+          "capacity_state": "ok",
+          "heal_mode": "propose",
+          "subject_join": "off"
+        }
+      },
+      "rules": [
+        "Every number and sentence on the page comes from /v1/ebrain/limits",
+        "Self-heal is approval-required by default; nothing is merged automatically",
+        "Above 1,000 memories every answer is labelled beyond tested range"
+      ],
+      "success": "The e-brain page shows the capacity meter, honest limits and the current memory with provenance.",
+      "errors": [
+        "401 missing or unknown token",
+        "Service unreachable: the page says nothing was changed and offers Retry"
       ]
     }
   ]

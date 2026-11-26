@@ -57,6 +57,40 @@ On Windows, `scripts/setup.ps1` does all of the above, plus the Python tooling v
 
 With `NEXT_PUBLIC_EBRAIN_API_URL` unset, e-brain uses local preview fixtures and makes no API requests. To connect to the local E-Brain service, set `NEXT_PUBLIC_EBRAIN_API_URL` to its loopback URL and `NEXT_PUBLIC_EBRAIN_TOKEN` to the intended user's token, then rebuild. These `NEXT_PUBLIC_` values are visible to the browser; configure them only for your own local session, not a shared deployment. The API accepts the local web origins on ports 3000 and 3100. `.env.example` lists these names and the optional `ONE_FOR_ALL_PREVIEW_URL` used by `scripts/review.mjs`.
 
+### History (preview by default, live opt-in)
+
+`/history` and `/tasks/<id>` show the fictional sample records unless live mode is switched on, and make **no** History network requests in preview mode. Live mode reads the real, owner-scoped History API through a same-origin proxy (`src/app/api/history/[...path]/route.ts`), so the backend token never reaches the browser and no CORS is needed. The proxy is read-only (GET) and only forwards an exact allowlist of routes.
+
+Server-only variables (never prefix these with `NEXT_PUBLIC_`), plus the one public switch:
+
+| Variable | Where | Purpose |
+| --- | --- | --- |
+| `HISTORY_API_URL` | server | Backend base URL, e.g. `http://127.0.0.1:8765` |
+| `HISTORY_API_TOKEN` | server | A **member** token from the backend's `HISTORY_TOKENS` |
+| `NEXT_PUBLIC_HISTORY_API_URL` | build time | `/api/history` turns live mode on; unset = preview. Anything that is not a same-origin `/api/history` path is ignored |
+
+PowerShell:
+
+```powershell
+$env:HISTORY_API_URL = "http://127.0.0.1:8765"
+$env:HISTORY_API_TOKEN = "dev-history-token"
+$env:NEXT_PUBLIC_HISTORY_API_URL = "/api/history"
+npm run dev
+```
+
+bash (Linux/WSL):
+
+```bash
+export HISTORY_API_URL="http://127.0.0.1:8765"
+export HISTORY_API_TOKEN="dev-history-token"
+export NEXT_PUBLIC_HISTORY_API_URL="/api/history"
+npm run dev
+```
+
+`NEXT_PUBLIC_HISTORY_API_URL` is inlined at build time, so rebuild (`npm run build`) after changing it. To try live mode against an already-built preview without rebuilding, run `localStorage.setItem("one-for-all-history-api", "/api/history")` in the browser console (development and tests only; it is not a security boundary).
+
+If live mode is on and the API is unavailable, the page shows an honest error with a retry; it never falls back to sample data. To roll back, unset `NEXT_PUBLIC_HISTORY_API_URL` and rebuild. Backend setup, seeding and the token format are in the [backend README](../backend/README.md#history-live-mode-p0).
+
 Claude Code's project hooks and the Codex instructions in `AGENTS.md` use the
 sibling API repo's pinned Python venv for E-Brain memory. Set the intended
 agent's `EBRAIN_AGENT_TOKEN` and optional `EBRAIN_URL` in that agent's process;

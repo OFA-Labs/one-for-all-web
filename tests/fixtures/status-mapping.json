@@ -1,0 +1,149 @@
+{
+  "_comment": "Shared with the frontend (frontend/tests/fixtures/status-mapping.json). Keep both copies identical. Rows: state, tier, evidence_status -> display_status (null = never shown in History).",
+  "rows": [
+    {
+      "state": "completed",
+      "tier": "A",
+      "evidence_status": "verified",
+      "display_status": "Verified"
+    },
+    {
+      "state": "completed",
+      "tier": "A",
+      "evidence_status": "held",
+      "display_status": "Needs review"
+    },
+    {
+      "state": "completed",
+      "tier": "B",
+      "evidence_status": "held",
+      "display_status": "Needs review"
+    },
+    {
+      "state": "completed",
+      "tier": "B",
+      "evidence_status": "submitted",
+      "display_status": "Submitted"
+    },
+    {
+      "state": "completed",
+      "tier": "B",
+      "evidence_status": "verified",
+      "display_status": "Submitted"
+    },
+    {
+      "state": "completed",
+      "tier": "A",
+      "evidence_status": "submitted",
+      "display_status": "Submitted"
+    },
+    {
+      "state": "completed",
+      "tier": "C",
+      "evidence_status": "submitted",
+      "display_status": "Needs review"
+    },
+    {
+      "state": "completed",
+      "tier": "C",
+      "evidence_status": "unknown",
+      "display_status": "Needs review"
+    },
+    {
+      "state": "completed",
+      "tier": "D",
+      "evidence_status": "submitted",
+      "display_status": "Unknown"
+    },
+    {
+      "state": "completed",
+      "tier": "D",
+      "evidence_status": "verified",
+      "display_status": "Unknown"
+    },
+    {
+      "state": "completed",
+      "tier": "D",
+      "evidence_status": "held",
+      "display_status": "Unknown"
+    },
+    {
+      "state": "completed",
+      "tier": "none",
+      "evidence_status": "none",
+      "display_status": "Unknown"
+    },
+    {
+      "state": "completed",
+      "tier": "unknown",
+      "evidence_status": "unknown",
+      "display_status": "Unknown"
+    },
+    {
+      "state": "waiting",
+      "tier": "none",
+      "evidence_status": "none",
+      "display_status": "Needs review"
+    },
+    {
+      "state": "permission",
+      "tier": "A",
+      "evidence_status": "verified",
+      "display_status": "Needs review"
+    },
+    {
+      "state": "question",
+      "tier": "none",
+      "evidence_status": "none",
+      "display_status": "Needs review"
+    },
+    {
+      "state": "paused",
+      "tier": "none",
+      "evidence_status": "none",
+      "display_status": "Paused"
+    },
+    {
+      "state": "paused",
+      "tier": "B",
+      "evidence_status": "submitted",
+      "display_status": "Paused"
+    },
+    {
+      "state": "declined",
+      "tier": "none",
+      "evidence_status": "none",
+      "display_status": "Declined"
+    },
+    {
+      "state": "cancelled",
+      "tier": "none",
+      "evidence_status": "none",
+      "display_status": "Cancelled"
+    },
+    {
+      "state": "error",
+      "tier": "none",
+      "evidence_status": "none",
+      "display_status": "Error"
+    },
+    {
+      "state": "unknown",
+      "tier": "unknown",
+      "evidence_status": "unknown",
+      "display_status": "Unknown"
+    },
+    {
+      "state": "planning",
+      "tier": "none",
+      "evidence_status": "none",
+      "display_status": null
+    },
+    {
+      "state": "executing",
+      "tier": "none",
+      "evidence_status": "none",
+      "display_status": null
+    }
+  ]
+}

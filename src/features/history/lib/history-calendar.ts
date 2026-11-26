@@ -1,7 +1,8 @@
-/** Calendar arithmetic uses UTC civil dates; display/event grouping uses the
- * currently selected display time zone. */
+import { civilDateInZone, DEFAULT_TIME_ZONE } from "@/lib/history/civil";
+
+/** Calendar arithmetic uses UTC civil dates; display/event grouping takes the
+ * selected display time zone as an explicit argument (default: Asia/Kolkata). */
 export type CalendarView = "day" | "week" | "month" | "year";
-const CALENDAR_TIMEZONE = "Asia/Kolkata";
 
 export const TIME_ZONE_OPTIONS = [
   { value: "Asia/Kolkata", label: "India Standard Time (GMT+5:30)" },
@@ -10,28 +11,21 @@ export const TIME_ZONE_OPTIONS = [
   { value: "America/New_York", label: "New York (ET)" },
 ] as const;
 
-let activeTimeZone: string = CALENDAR_TIMEZONE;
-export function setCalendarTimeZone(value: string) {
-  activeTimeZone = value || CALENDAR_TIMEZONE;
-}
-export function getCalendarTimeZone() {
-  return activeTimeZone;
-}
 function civilDate(date: Date): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
 }
 function parseCivilDate(value: string): Date {
   return new Date(`${value}T00:00:00.000Z`);
 }
+export function getTodayInZone(
+  now: Date = new Date(),
+  timeZone: string = DEFAULT_TIME_ZONE,
+): string {
+  return civilDateInZone(now, timeZone);
+}
+/** @deprecated Use getTodayInZone; kept so existing callers/tests keep working. */
 export function getTodayInKolkata(now: Date = new Date()): string {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: activeTimeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-  const part = (type: string) => parts.find((p) => p.type === type)?.value;
-  return `${part("year")}-${part("month")}-${part("day")}`;
+  return getTodayInZone(now, DEFAULT_TIME_ZONE);
 }
 export function addDays(value: string, amount: number): string {
   const date = parseCivilDate(value);
@@ -123,23 +117,33 @@ export function relativeDay(
         ? "Tomorrow"
         : displayCivil(anchor, { weekday: "long" });
 }
-export function eventCivilDate(timestamp: string): string {
-  return getTodayInKolkata(new Date(timestamp));
+export type Instant = string | number | Date;
+export function eventCivilDate(
+  timestamp: Instant,
+  timeZone: string = DEFAULT_TIME_ZONE,
+): string {
+  return civilDateInZone(timestamp, timeZone);
 }
-export function eventTime(timestamp: string): string {
+export function eventTime(
+  timestamp: Instant,
+  timeZone: string = DEFAULT_TIME_ZONE,
+): string {
   return new Intl.DateTimeFormat("en-IN", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
-    timeZone: activeTimeZone,
+    timeZone,
   }).format(new Date(timestamp));
 }
-export function eventMinutes(timestamp: string): number {
+export function eventMinutes(
+  timestamp: Instant,
+  timeZone: string = DEFAULT_TIME_ZONE,
+): number {
   const p = new Intl.DateTimeFormat("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
     hourCycle: "h23",
-    timeZone: activeTimeZone,
+    timeZone,
   }).formatToParts(new Date(timestamp));
   return (
     Number(p.find((x) => x.type === "hour")?.value) * 60 +
