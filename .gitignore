@@ -35,3 +35,24 @@ desktop.ini
 *.swp
 .idea/
 .claude/settings.local.json
+
+# Local-only workspace help (anchored to this repo root)
+/_local/
+/local-only/
+/reports/
+/research_notes/
+/browser use/
+/implementation_voice-pipeline.md
+/*.mp4
+/*.webm
+/*.mov
+/*.wav
+/worktrees/
+.worktrees/
+*.tmp
+temp/
+
+# Local secrets/evidence not covered above
+!.env.*.example
+developer_handoff.yaml
+voice-traces/
