@@ -1,7 +1,7 @@
 # ONE FOR ALL — Spec, Iteration 1 (final)
 
 A voice-first assistant that works in your own browser, for every user.
-Built for the Gradium × TensorTonic Voice Challenge: **20 Nov 2026, 9 PM IST → 20 Dec 2026, 9 PM IST**.
+Built by OFA Labs as a product for its owner and team. Gradium is the speech provider.
 
 This version replaces all earlier ones. It follows the decision of 16 Nov 2026: **the brain runs in the cloud; the hands run in each user's own Chrome, through a ONE FOR ALL extension** — the way Claude in Chrome works, but voice-first and open to anyone who visits the website.
 
@@ -664,16 +664,16 @@ The website never talks to the database directly; only the backend does. Tokens 
 
 Automated tests use the Playground only, never your real accounts.
 
-### B10. Hackathon layer
+### B10. Product evaluation layer
 
-#### B10.1 The contest
+#### B10.1 Quality criteria
 
-Gradium × TensorTonic Voice Challenge. Starts **20 Nov, 9 PM IST**; entry deadline **13 Dec, 9 PM IST**; submission **20 Dec, 9 PM IST**; winners by 5 Jan; solo or up to 4. Judged on how well it speaks text it has never seen, how useful it is, and feedback to Gradium. [verified on the contest page]
-From the Rules tab, as read by one reviewer [check — please confirm]: speech must use the Gradium API; the app must be built inside the window; every entry is judged on the same hard-text set (names, numbers, dates, abbreviations, equations, code); voice apps are also scored on streaming and interruption; feedback is a form; winners are paid after judges reproduce the runs.
+ONE FOR ALL is built by the owner and their team. Release milestones and evaluation criteria are team-owned. Gradium is the speech provider.
+Speech uses the Gradium API. Quality is measured on unseen hard text (names, numbers, dates, abbreviations, equations, code), streaming and interruption, usefulness, and documented feedback to Gradium.
 
 #### B10.2 Reader mode
 
-Paste text, a link or a PDF; ONE FOR ALL reads it aloud through the speakable-text layer and Gradium. No login. Each sentence is highlighted as spoken and can be flagged. It is how a judge's own hard text reaches the app.
+Paste text, a link or a PDF; ONE FOR ALL reads it aloud through the speakable-text layer and Gradium. No login. Each sentence is highlighted as spoken and can be flagged. It is how a user's own hard text reaches the app.
 
 #### B10.3 Speech test harness
 
@@ -823,8 +823,8 @@ Rules: **never paste a secret into chat** (I create `.env.example`; you fill the
 
 | # | What | Why | Paid | Free or cheap | You hand over |
 |---|---|---|---|---|---|
-| 1 | **Contest registration** | Entry | — | Free | Register on TensorTonic; tell me the credit amount; confirm the Rules tab |
-| 2 | **Gradium account** | All speech | XS, about $12 a month, 225k credits [verified] | Contest credits; free plan 45k credits a month [verified] | `GRADIUM_API_KEY` |
+| 1 | **Release plan** | Delivery ownership | — | Free | Team members and target dates |
+| 2 | **Gradium account** | All speech | XS, about $12 a month, 225k credits [verified] | Plan credits; free plan 45k credits a month [verified] | `GRADIUM_API_KEY` |
 | 3 | **A paid model key** | Brain and workers; page content must go to a provider that does not train on it | AWS Bedrock with model access enabled. New accounts often start with low limits [check] — make one real call before 20 Nov | A second pay-as-you-go key as plan B; free keys only for the voice agent | Keys in `.env`; your monthly ceiling |
 | 4 | **Server** | Backend, voice, research browsers | 4 vCPU / 8 GB, x86, **EU region**: roughly €9–17 a month at a budget host, $44 on AWS Lightsail [verified 15 Nov] | 2 vCPU / 4 GB minimum; Oracle's free machine for development only (reclaimed when idle [verified]) | Account access or a deploy key |
 | 5 | **Domain** | Required: secure connections, Telegram's in-chat page, sign-in, the store listing | about ₹800 a year | — | Domain with DNS access |
@@ -955,7 +955,7 @@ The contest's Rules tab · the Chrome Web Store registration fee and current rev
 
 ### E3. Sources
 
-**Contest:** tensortonic.com/contests/gradium-voice-challenge
+**Product:** team-owned specification and demo plan.
 **Browser agents and extensions:** anthropic.com/news/claude-for-chrome; support.claude.com articles 12902428 (safety) and 12902446 (permissions); 9to5google.com, 16 Oct 2026 (ChatGPT controls Chrome tabs); developer.chrome.com — debugger API, Web Store review process, Web Store updates of Aug 2026; Chromium extensions group posts on review backlog and microphone permissions
 **Open-source bases and tools:** github.com/nanobrowser/nanobrowser; github.com/alibaba/page-agent; github.com/hangwin/mcp-chrome (via listings); github.com/morluto/rea and its DISCLAIMER.md; Anthropic consumer terms; Chrome Web Store policy on impersonation and intellectual property
 **OpenClaw:** docs.openclaw.ai — release 2026.8.1 (browser relay and computer use), trust model, tool-policy hooks; Chrome Web Store listing for OpenClaw Browser Relay
