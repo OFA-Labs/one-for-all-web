@@ -49,12 +49,7 @@ import { ThemeSelector } from "./theme-selector";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 type NavGlyphKey =
-  | "home"
-  | "playground"
-  | "history"
-  | "watchers"
-  | "heart"
-  | "brain";
+  "home" | "playground" | "history" | "watchers" | "heart" | "brain";
 type NavItem = {
   href: string;
   name: string;
@@ -75,7 +70,7 @@ const STANDALONE_ROUTES = new Set([
   "/recover",
   "/onboarding",
 ]);
-const PUBLIC_ROUTES = new Set([...STANDALONE_ROUTES, "/privacy"]);
+const PUBLIC_ROUTES = new Set([...STANDALONE_ROUTES, "/privacy", "/desktop"]);
 
 const nav: NavItem[] = [
   { href: "/", name: "Home", glyph: "home" },
@@ -203,11 +198,7 @@ function NavGlyph({ item }: { item: NavItem }) {
   if (!item.image) {
     const Glyph = item.icon;
     return Glyph ? (
-      <Glyph
-        size={item.iconSize ?? 26}
-        strokeWidth={1.5}
-        aria-hidden="true"
-      />
+      <Glyph size={item.iconSize ?? 26} strokeWidth={1.5} aria-hidden="true" />
     ) : null;
   }
   return (
@@ -738,6 +729,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                     "/privacy": "Privacy",
                     "/extension": "Browser companion",
                     "/voice-lab": "Voice lab",
+                    "/desktop": "Desktop Integration",
                     "/about": "About ONE FOR ALL",
                     "/onboarding": "Get started",
                     "/sign-in": "Sign in",
@@ -779,7 +771,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </header>
         <div className="preview-banner">
           <Sparkles size={14} aria-hidden="true" />
-          <span>Local demo — no audio or real browser actions.</span>
+          <span>
+            Local preview. Desktop voice needs a connected Windows companion.
+          </span>
           <Link href="/about">
             What’s included <ChevronDown size={13} aria-hidden="true" />
           </Link>

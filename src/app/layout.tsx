@@ -5,6 +5,7 @@ import "@/styles/globals.css";
 import { AppProvider } from "@/app/providers/app-provider";
 import { ThemeProvider } from "@/app/providers/theme-provider";
 import { Shell } from "@/components/layout/shell";
+import { DesktopProvider } from "@/components/voice/desktop-provider";
 // Deep import on purpose: the settings barrel would pull the whole Settings
 // page (and its CSS) into the root layout bundle for every route.
 import { DictationProvider } from "@/features/settings/components/dictation/dictation-provider";
@@ -36,7 +37,9 @@ export default function RootLayout({
         <ThemeProvider>
           <AppProvider>
             <DictationProvider>
-              <Shell>{children}</Shell>
+              <DesktopProvider>
+                <Shell>{children}</Shell>
+              </DesktopProvider>
             </DictationProvider>
           </AppProvider>
         </ThemeProvider>
