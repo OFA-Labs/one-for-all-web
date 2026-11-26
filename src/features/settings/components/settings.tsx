@@ -7,13 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { IntegrationButton, Notice, PageTitle, Pill } from "@/components/common";
+import {
+  IntegrationButton,
+  Notice,
+  PageTitle,
+  Pill,
+} from "@/components/common";
 import { DictationWorkspace } from "@/features/settings/components/dictation/dictation-workspace";
+import { VoiceStatus } from "@/components/voice/voice-status";
 
 const SETTINGS_TABS = [
   "personal",
   "voice",
   "dictation",
+  "desktop",
   "safety",
   "usage",
 ] as const;
@@ -31,7 +38,11 @@ const initial = {
   channel: "Brother’s channel · sample",
   mode: "Hybrid",
 };
-export function SettingsPage({ initialTab = "personal" }: { initialTab?: string }) {
+export function SettingsPage({
+  initialTab = "personal",
+}: {
+  initialTab?: string;
+}) {
   const { role, integrate, notify } = useApp();
   const [prefs, setPrefs] = useState(initial);
   const [dirty, setDirty] = useState(false);
@@ -91,9 +102,13 @@ export function SettingsPage({ initialTab = "personal" }: { initialTab?: string 
           <TabsTrigger value="personal">Profile & facts</TabsTrigger>
           <TabsTrigger value="voice">Voice & attention</TabsTrigger>
           <TabsTrigger value="dictation">Dictation</TabsTrigger>
+          <TabsTrigger value="desktop">Desktop Integration</TabsTrigger>
           <TabsTrigger value="safety">Safety & privacy</TabsTrigger>
           <TabsTrigger value="usage">Usage</TabsTrigger>
         </TabsList>
+        <TabsContent value="desktop">
+          <VoiceStatus />
+        </TabsContent>
         <TabsContent value="dictation">
           <div className="mt-6">
             <DictationWorkspace embedded />
