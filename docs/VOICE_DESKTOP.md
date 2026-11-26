@@ -13,7 +13,8 @@ were recoverably archived. That workspace path is not required by the web runtim
 
 1. Run the API companion using its pinned Python 3.12 setup and local speech keys.
 2. Run this checkout with `npm ci` then `npm run dev -- --port 3000`.
-3. Open `http://127.0.0.1:3000/desktop`, or Settings -> Desktop Integration.
+3. Open Settings -> Computer & voice, or `http://127.0.0.1:3000/desktop`, which
+   renders the same unified settings surface.
 4. Connect once, verify the Windows origin/key prompt, and approve it yourself.
 5. Switch to another website, press physical Caps Lock and say `Open WhatsApp`.
 
@@ -33,6 +34,18 @@ human handoff, bounded file preview, startup preference, Stop, Quit and Disconne
 Scope requests send a named permission; folders/executables are selected natively.
 Decision requests carry only the active task/card/read hash and a decision.
 
+All of those controls live in one Settings section. The Speech providers panel
+reads the companion's real `/v1/health` configuration on demand (runtime mode,
+language, provider order, whether each key is configured, headphone mode and
+command policy). Key values are never serialized to the browser. Account sign-in,
+OFA Engine reasoning and Slack sending are shown as honest read-only state, not
+as fake action buttons.
+
+Pairing and permission prompts use a compact dark consent card inside the native
+orb panel instead of a raw system message box; the website shows a matching
+minimal approval card while it waits. Both show the origin and browser key so
+the user can verify the request.
+
 Only public companion URL and a future real installer download URL belong in
 `NEXT_PUBLIC_*`. Provider secrets stay native. Production/staging origins and the
 installer URL remain unconfigured until a real deployment/release exists.
@@ -42,8 +55,8 @@ Slack live sending were explicitly deferred. Opening a URL proves dispatch, not
 page load; personal tab control needs separate browse installation/pairing. This
 is an iteration-1 control surface, not every OS use case or a production release.
 
-Validation before publication: **3 desktop feature tests passed**; full web suite
-**135 passed, 1 pre-existing dictation-focus failure** reproduced on pristine staging.
+Validation before publication: **5 desktop/settings feature tests passed**; full web
+suite **137 passed, 1 pre-existing dictation-focus failure** reproduced on pristine staging.
 Typecheck/build, lint and dependency architecture passed. Browser feature transport
 is mocked; the API handoff separately records actual OS/provider/loopback checks.
 Remote CI status must be read from the PR, not inferred from these local results.

@@ -1,6 +1,72 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { useDesktop } from "./desktop-provider";
+import type { CompanionHealth } from "@/lib/voice/local-development-client";
+
+const languageLabels: Record<string, string> = {
+  auto: "Auto-detect from speech",
+  en: "English",
+  hi: "Hindi",
+  hinglish: "Hindi-English",
+};
+
+function SpeechStatus({ health }: { health?: CompanionHealth }) {
+  const speech = health?.speech;
+  if (!speech)
+    return (
+      <p className="mt-2">
+        Start the desktop companion to read its live speech configuration.
+      </p>
+    );
+  const providers = [
+    `${speech.deepgram_configured ? "Deepgram configured" : "Deepgram not configured"}`,
+    `${speech.gradium_configured ? "Gradium configured" : "Gradium not configured"}`,
+  ].join(" · ");
+  return (
+    <dl className="mt-2 grid gap-2">
+      <div>
+        <dt className="inline font-semibold">Runtime: </dt>
+        <dd className="inline">
+          {speech.mode === "live"
+            ? "Live provider speech"
+            : "Fake speech (no provider calls)"}
+        </dd>
+      </div>
+      <div>
+        <dt className="inline font-semibold">Language: </dt>
+        <dd className="inline">
+          {languageLabels[speech.language] ?? speech.language}
+        </dd>
+      </div>
+      <div>
+        <dt className="inline font-semibold">Speech-to-text order: </dt>
+        <dd className="inline">{speech.stt_order.join(" → ")}</dd>
+      </div>
+      <div>
+        <dt className="inline font-semibold">Text-to-speech order: </dt>
+        <dd className="inline">{speech.tts_order.join(" → ")}</dd>
+      </div>
+      <div>
+        <dt className="inline font-semibold">Keys on this computer: </dt>
+        <dd className="inline">{providers}. Key values are never sent here.</dd>
+      </div>
+      <div>
+        <dt className="inline font-semibold">Microphone mode: </dt>
+        <dd className="inline">
+          {speech.headphones
+            ? "Headphones · interruption enabled"
+            : "Speaker · capture gated while replying"}
+        </dd>
+      </div>
+      <div>
+        <dt className="inline font-semibold">Command policy: </dt>
+        <dd className="inline">
+          {speech.command_only ? "Deterministic commands only" : "Extended"}
+        </dd>
+      </div>
+    </dl>
+  );
+}
 
 export function VoiceStatus() {
   const {
@@ -12,20 +78,74 @@ export function VoiceStatus() {
     answer,
     continueTask,
     chooseApp,
+    checkCompanion,
   } = useDesktop();
   const download = process.env.NEXT_PUBLIC_OFA_COMPANION_DOWNLOAD_URL;
+  const connected = state.connected;
+  const speech = state.health?.speech;
+
   return (
     <section className="panel mt-6" aria-label="Desktop Integration">
       <div className="section-heading">
         <h2>Desktop Integration</h2>
-        <span>Windows · Local development</span>
+        <span>
+          {state.health?.version
+            ? `Companion ${state.health.version} · ${state.health.os ?? "Windows"}`
+            : "Companion not running"}
+        </span>
       </div>
+
+      <dl className="mt-4 grid gap-2">
+        <div>
+          <dt className="inline font-semibold">Computer: </dt>
+          <dd className="inline">
+            <span role="status">{state.status}</span>
+          </dd>
+        </div>
+        <div>
+          <dt className="inline font-semibold">Microphone: </dt>
+          <dd className="inline">
+            {connected
+              ? state.voiceState && state.voiceState !== "IDLE"
+                ? state.voiceState.toLowerCase()
+                : "Idle · press Caps Lock"
+              : "Not enabled"}
+          </dd>
+        </div>
+        <div>
+          <dt className="inline font-semibold">Application access: </dt>
+          <dd className="inline">
+            {connected
+              ? `${state.apps.length} installed applications indexed`
+              : "Disabled"}
+          </dd>
+        </div>
+      </dl>
+      <p className="mt-3" aria-live="polite">
+        {state.text}
+      </p>
+
+      {state.status === "Approve on Windows" && (
+        <div className="mt-4 rounded border p-4" role="status" aria-live="polite">
+          <h3 className="font-semibold">Approve on Windows</h3>
+          <p className="mt-1">
+            A small permission card is open on your desktop. Check the website
+            and browser key, then choose Connect.
+          </p>
+          {state.fingerprint && (
+            <p className="mt-2">
+              Browser key: <code>{state.fingerprint}</code>
+            </p>
+          )}
+          <p className="muted small mt-2">
+            Waiting for your confirmation. Nothing is recorded and no app is
+            opened until you approve.
+          </p>
+        </div>
+      )}
+
       {!!state.choices?.length && (
-        <div
-          className="mt-4"
-          role="region"
-          aria-label="Choose installed application"
-        >
+        <div className="mt-4" role="region" aria-label="Choose installed application">
           <p>Which installed application should I open?</p>
           <div className="button-row">
             {state.choices.map((option) => (
@@ -35,83 +155,6 @@ export function VoiceStatus() {
             ))}
           </div>
         </div>
-      )}
-      {state.connected && state.filePreview !== undefined && (
-        <details className="mt-4">
-          <summary>Latest selected file text</summary>
-          <pre className="mt-2 max-h-80 overflow-auto whitespace-pre-wrap">
-            {state.filePreview}
-          </pre>
-          <p>
-            Preview is limited to 16,384 characters. Spoken reading is limited
-            to the first 1,000 characters.
-          </p>
-        </details>
-      )}
-      {state.connected && (
-        <>
-          <div className="button-row mt-4">
-            <Button variant="outline" onClick={refresh}>
-              Refresh applications
-            </Button>
-            <Button variant="outline" onClick={() => scope("register_app")}>
-              Register installed app
-            </Button>
-            <Button
-              variant="outline"
-              disabled={state.scopes?.window_controls}
-              onClick={() => scope("windows")}
-            >
-              {state.scopes?.window_controls
-                ? "Window controls enabled"
-                : "Enable window controls"}
-            </Button>
-            <Button variant="outline" onClick={() => scope("read_folder")}>
-              Choose read folder
-            </Button>
-            <Button variant="outline" onClick={() => scope("write_folder")}>
-              Choose write folder
-            </Button>
-          </div>
-          <p className="mt-3">
-            Read folders: {state.scopes?.read_roots?.join(", ") || "None"}.
-            Write folders: {state.scopes?.write_roots?.join(", ") || "None"}.
-          </p>
-          <details className="mt-3">
-            <summary>Available application names ({state.apps.length})</summary>
-            <ul className="mt-2 max-h-64 overflow-y-auto">
-              {state.apps.map((app) => (
-                <li key={app.id}>{app.name}</li>
-              ))}
-            </ul>
-            <p>
-              Use the full name shown above. Similar names require a choice;
-              fuzzy matches only suggest.
-            </p>
-          </details>
-          <details className="mt-3">
-            <summary>Startup preference</summary>
-            <p>
-              Starting OFA at Windows sign-in is optional. It still waits for a
-              paired connection and a physical Caps Lock press before recording.
-            </p>
-            <div className="button-row mt-2">
-              <Button variant="outline" onClick={() => scope("startup_on")}>
-                Enable startup
-              </Button>
-              <Button variant="outline" onClick={() => scope("startup_off")}>
-                Disable startup
-              </Button>
-            </div>
-          </details>
-          <p className="mt-3">
-            Slack file sending:{" "}
-            {state.scopes?.slack_configured
-              ? "Locally configured; each send needs approval"
-              : "Not configured; live Slack testing deferred"}
-            .
-          </p>
-        </>
       )}
       {state.task?.approval && (
         <div
@@ -176,11 +219,7 @@ export function VoiceStatus() {
         </div>
       )}
       {state.task?.handoff && (
-        <div
-          className="mt-4"
-          role="region"
-          aria-label="Desktop human assistance"
-        >
+        <div className="mt-4" role="region" aria-label="Desktop human assistance">
           <p>{state.task.handoff.reason}</p>
           <p>
             Finish this step in the application, then continue. OFA will check
@@ -189,62 +228,35 @@ export function VoiceStatus() {
           <Button onClick={continueTask}>I finished; check again</Button>
         </div>
       )}
-      <p>
-        Connect once to open installed apps from any website. Press Caps Lock to
-        start or stop listening.
-      </p>
-      <dl className="mt-4 grid gap-2">
-        <div>
-          <dt className="inline font-semibold">Computer: </dt>
-          <dd className="inline" role="status">
-            {state.status}
-          </dd>
-        </div>
-        <div>
-          <dt className="inline font-semibold">Microphone: </dt>
-          <dd className="inline">
-            {state.connected
-              ? state.voiceState && state.voiceState !== "IDLE"
-                ? state.voiceState.toLowerCase()
-                : "Idle · press Caps Lock"
-              : "Not enabled"}
-          </dd>
-        </div>
-        <div>
-          <dt className="inline font-semibold">Application access: </dt>
-          <dd className="inline">
-            {state.connected
-              ? `${state.apps.length} installed applications indexed`
-              : "Disabled"}
-          </dd>
-        </div>
-      </dl>
-      <div className="button-row mt-4">
+      {connected && state.filePreview !== undefined && (
+        <details className="mt-4">
+          <summary>Latest selected file text</summary>
+          <pre className="mt-2 max-h-80 overflow-auto whitespace-pre-wrap">
+            {state.filePreview}
+          </pre>
+          <p>Showing the first 16,384 characters read by the companion.</p>
+        </details>
+      )}
+
+      <h3 className="mt-6">Connection</h3>
+      <div className="button-row mt-2">
         <Button
           disabled={
-            state.connected ||
+            connected ||
             state.status === "Approve on Windows" ||
             state.status === "Connecting"
           }
           onClick={() => run("connect")}
         >
-          {state.connected ? "Computer connected" : "Connect computer"}
+          {connected ? "Computer connected" : "Connect computer"}
         </Button>
-        <Button
-          variant="outline"
-          disabled={!state.connected}
-          onClick={() => run("stop")}
-        >
+        <Button variant="outline" disabled={!connected} onClick={() => run("stop")}>
           Stop voice
         </Button>
         <Button variant="outline" onClick={() => run("disconnect")}>
           Disconnect computer
         </Button>
-        <Button
-          variant="outline"
-          disabled={!state.connected}
-          onClick={() => run("quit")}
-        >
+        <Button variant="outline" disabled={!connected} onClick={() => run("quit")}>
           Quit companion
         </Button>
         {download && (
@@ -253,15 +265,110 @@ export function VoiceStatus() {
           </a>
         )}
       </div>
-      <p className="mt-3" aria-live="polite">
-        {state.text}
-      </p>
-      {state.fingerprint && !state.connected && (
-        <p>
+      {state.fingerprint && !connected && (
+        <p className="mt-2">
           Browser key: <code>{state.fingerprint}</code>
         </p>
       )}
-      <details className="mt-4">
+      <p className="mt-2">
+        Press Caps Lock on this computer to start or stop listening. Pairing is
+        required once; voice commands work from any allowed website.
+      </p>
+
+      {connected && (
+        <>
+          <h3 className="mt-6">Permissions and folders</h3>
+          <div className="button-row mt-2">
+            <Button variant="outline" onClick={() => scope("register_app")}>
+              Register installed app
+            </Button>
+            <Button
+              variant="outline"
+              disabled={state.scopes?.window_controls}
+              onClick={() => scope("windows")}
+            >
+              {state.scopes?.window_controls
+                ? "Window controls enabled"
+                : "Enable window controls"}
+            </Button>
+            <Button variant="outline" onClick={() => scope("read_folder")}>
+              Choose read folder
+            </Button>
+            <Button variant="outline" onClick={() => scope("write_folder")}>
+              Choose write folder
+            </Button>
+            <Button variant="outline" onClick={() => scope("startup_on")}>
+              Enable startup
+            </Button>
+            <Button variant="outline" onClick={() => scope("startup_off")}>
+              Disable startup
+            </Button>
+          </div>
+          <p className="mt-3">
+            Read folders: {state.scopes?.read_roots?.join(", ") || "None"}. Write
+            folders: {state.scopes?.write_roots?.join(", ") || "None"}. Each
+            button opens a native Windows confirmation; websites cannot choose
+            paths or apps directly.
+          </p>
+
+          <h3 className="mt-6">Applications</h3>
+          <div className="button-row mt-2">
+            <Button variant="outline" onClick={refresh}>
+              Refresh applications
+            </Button>
+          </div>
+          <details className="mt-3">
+            <summary>Available application names ({state.apps.length})</summary>
+            <ul className="mt-2 max-h-64 overflow-y-auto">
+              {state.apps.map((app) => (
+                <li key={app.id}>{app.name}</li>
+              ))}
+            </ul>
+            <p>
+              Use the full name shown above. Similar names require a choice;
+              fuzzy matches only suggest.
+            </p>
+          </details>
+        </>
+      )}
+
+      <div className="section-heading mt-6">
+        <h3>Speech providers</h3>
+        <Button variant="outline" onClick={checkCompanion}>
+          Check companion status
+        </Button>
+      </div>
+      <SpeechStatus health={state.health} />
+
+      <h3 className="mt-6">Account and connected services</h3>
+      <dl className="mt-2 grid gap-2">
+        <div>
+          <dt className="inline font-semibold">Sign-in: </dt>
+          <dd className="inline">
+            {state.health?.identity_mode === "local-development"
+              ? "Local development pairing; no account is signed in"
+              : "Not reported by companion"}
+          </dd>
+        </div>
+        <div>
+          <dt className="inline font-semibold">OFA Engine reasoning: </dt>
+          <dd className="inline">
+            {speech?.engine_enabled
+              ? "Connected"
+              : "Not connected · deterministic commands only"}
+          </dd>
+        </div>
+        <div>
+          <dt className="inline font-semibold">Slack file sending: </dt>
+          <dd className="inline">
+            {state.scopes?.slack_configured
+              ? "Configured on this computer; each send needs approval"
+              : "Not configured on this computer"}
+          </dd>
+        </div>
+      </dl>
+
+      <details className="mt-6">
         <summary>Setup and troubleshooting</summary>
         <ol className="list-decimal pl-6 mt-2 space-y-2">
           <li>Start the Python desktop companion on this Windows computer.</li>
@@ -280,18 +387,10 @@ export function VoiceStatus() {
         </ol>
         <p className="mt-2">
           If microphone access fails, allow desktop apps to use your microphone
-          in Windows Privacy settings, then retry.
-        </p>
-        <p className="mt-2">
-          Stopping voice keeps pairing. Disconnect revokes it. Browser
-          microphone permission is only needed for browser capture; this mode
-          uses the native microphone.
+          in Windows Privacy settings, then retry. Stop keeps pairing;
+          Disconnect revokes it and clears folder and window grants.
         </p>
       </details>
-      <p className="muted small mt-4">
-        Companion 0.2.2 · Basic commands use no LLM. Account sign-in and OFA
-        Engine integration are pending.
-      </p>
     </section>
   );
 }
