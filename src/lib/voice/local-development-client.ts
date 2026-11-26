@@ -40,6 +40,24 @@ export type VoiceEvent = {
     code?: string;
   } & Partial<DesktopTask>;
 };
+export type CompanionHealth = {
+  service?: string;
+  version?: string;
+  os?: string;
+  identity_mode?: string;
+  llm_enabled?: boolean;
+  speech?: {
+    mode: string;
+    language: string;
+    headphones: boolean;
+    command_only: boolean;
+    stt_order: string[];
+    tts_order: string[];
+    deepgram_configured: boolean;
+    gradium_configured: boolean;
+    engine_enabled: boolean;
+  };
+};
 export type DesktopState = {
   status: string;
   connected: boolean;
@@ -51,6 +69,7 @@ export type DesktopState = {
   task?: DesktopTask | null;
   choices?: { id: string; label: string }[];
   filePreview?: string;
+  health?: CompanionHealth;
 };
 type Identity = {
   keys: CryptoKeyPair;
@@ -122,6 +141,7 @@ export function connectVoice(
   let enabled = false;
   let busy = false;
   let appsLoaded = false;
+  let healthLoaded = false;
   let authenticating: Promise<void> | null = null;
 
   async function request(path: string, body?: object, authorized = false) {
@@ -218,6 +238,7 @@ export function connectVoice(
     try {
       await ensureSession();
       await request("/v1/heartbeat", {}, true);
+      if (!healthLoaded) await readHealth().catch(() => undefined);
       const scopes: DesktopScopes = await request(
         "/v1/desktop/status",
         undefined,
@@ -243,6 +264,11 @@ export function connectVoice(
     } finally {
       busy = false;
     }
+  }
+  async function readHealth() {
+    const health: CompanionHealth = await request("/v1/health");
+    healthLoaded = true;
+    if (!disposed) onState({ health });
   }
   async function disconnect() {
     enabled = false;
@@ -308,7 +334,7 @@ export function connectVoice(
     connect: async () => {
       onState({ status: "Connecting", text: "" });
       // First loopback request starts directly from the user's button action.
-      await request("/v1/health");
+      await readHealth();
       identity ??= await storedIdentity();
       if (identity?.pendingRevocation) await disconnect();
       if (identity?.grantId) {
@@ -338,7 +364,7 @@ export function connectVoice(
       onState({
         status: "Approve on Windows",
         fingerprint: pairing.fingerprint,
-        text: "Check the website and key shown in the Windows dialog, then choose Yes.",
+        text: "Check the website and browser key shown on the desktop card, then choose Connect.",
       });
       const deadline = Date.now() + 90000;
       while (!disposed && Date.now() < deadline) {
@@ -365,6 +391,11 @@ export function connectVoice(
         "Connection approval timed out. Click Connect computer to retry.",
       );
     },
+    refreshHealth: async () => {
+      await readHealth().catch(() => {
+        if (!disposed) onState({ health: undefined });
+      });
+    },
     stop: async () => {
       await ensureSession();
       await request("/v1/voice/stop", {}, true);
@@ -373,10 +404,12 @@ export function connectVoice(
       await ensureSession();
       await request("/v1/desktop/quit", {}, true);
       enabled = false;
+      healthLoaded = false;
       socket?.close();
       onState({
         connected: false,
         status: "Companion stopped",
+        health: undefined,
         task: null,
         text: "OFA Desktop has quit. Saved pairing is retained. Start it from the Windows Start Menu when ready.",
       });
@@ -385,7 +418,7 @@ export function connectVoice(
       await ensureSession();
       const result = await request("/v1/desktop/scopes", { kind }, true);
       onState({
-        text: "Check and approve the Windows permission dialog. Folder access uses a native folder picker.",
+        text: "Check and approve the card on your desktop. Folder and app choices open a native picker.",
       });
       const deadline = Date.now() + 120000;
       while (!disposed && Date.now() < deadline) {

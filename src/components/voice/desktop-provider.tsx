@@ -1,6 +1,7 @@
 "use client";
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -19,6 +20,7 @@ const Context = createContext<{
   run: (action: "connect" | "stop" | "disconnect" | "quit") => void;
   scope: (kind: string) => void;
   refresh: () => void;
+  checkCompanion: () => void;
   decide: (approve: boolean) => void;
   answer: (option: string) => void;
   continueTask: () => void;
@@ -104,6 +106,9 @@ export function DesktopProvider({ children }: { children: ReactNode }) {
         text: error instanceof Error ? error.message : "Desktop action failed.",
       })),
     );
+  const checkCompanion = useCallback(() => {
+    void client.current?.refreshHealth().catch(() => undefined);
+  }, []);
   return (
     <Context.Provider
       value={{
@@ -111,6 +116,7 @@ export function DesktopProvider({ children }: { children: ReactNode }) {
         run,
         scope: (kind) => handle(client.current?.scope(kind)),
         refresh: () => handle(client.current?.refresh()),
+        checkCompanion,
         decide: (approve) => {
           if (state.task) handle(client.current?.decide(state.task, approve));
         },
