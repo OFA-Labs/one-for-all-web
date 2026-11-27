@@ -91,6 +91,31 @@ export type EyesPreview = {
   sources: string[];
   sent_anywhere: boolean;
 };
+/** E-Brain → Info Corpus. "Use without consent" documents, and private items OFA can use but never see. */
+export type CorpusDocument = { name: string; bytes: number; modified?: number };
+export type PrivateItem = {
+  handle: string;
+  class: string;
+  service: string;
+  label: string;
+  allowed_targets: string[];
+  revoked: boolean | number;
+};
+export type PrivateView = { unlocked: boolean; items: PrivateItem[] };
+export type NewPrivateItem = {
+  service: string;
+  label: string;
+  value: string;
+  site: string;
+  sensitive: boolean;
+};
+const CORPUS_ERRORS: Record<string, string> = {
+  VAULT_LOCKED: "Unlock private items first.",
+  INVALID_ITEM:
+    "Check the item: short lowercase names, and a website that starts with https://",
+  INVALID_DOCUMENT:
+    "Use a short name with letters, numbers, spaces, - or _, and under 200 KB of text.",
+};
 export type DesktopState = {
   status: string;
   connected: boolean;
@@ -118,6 +143,15 @@ class GrantRevoked extends Error {
 }
 const endpoint =
   process.env.NEXT_PUBLIC_OFA_COMPANION_URL || "http://127.0.0.1:8767";
+
+function privateView(value: unknown): PrivateView {
+  const view = value as Partial<PrivateView> | null;
+  if (!Array.isArray(view?.items))
+    throw new Error(
+      "This companion does not support the Info Corpus yet. Update and restart it.",
+    );
+  return view as PrivateView;
+}
 
 /** Older companions do not know these settings; treat any other reply as "not available". */
 function settingsView(value: unknown): OfaSettingsView {
@@ -189,13 +223,18 @@ export function connectVoice(
   let healthLoaded = false;
   let authenticating: Promise<void> | null = null;
 
-  async function request(path: string, body?: object, authorized = false) {
+  async function request(
+    path: string,
+    body?: object,
+    authorized = false,
+    timeout = 5000,
+  ) {
     const options: RequestInit & { targetAddressSpace: "loopback" } = {
       method: body === undefined ? "GET" : "POST",
       cache: "no-store",
       credentials: "omit",
       targetAddressSpace: "loopback",
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(timeout),
       headers: {
         ...(body === undefined ? {} : { "Content-Type": "application/json" }),
         ...(authorized ? { Authorization: `Bearer ${token}` } : {}),
@@ -211,9 +250,13 @@ export function connectVoice(
       );
     }
     if (response.status === 410) throw new GrantRevoked();
+    if (path.startsWith("/v1/corpus") && [400, 423].includes(response.status)) {
+      const code = String((await response.json().catch(() => ({}))).code);
+      if (CORPUS_ERRORS[code]) throw new Error(CORPUS_ERRORS[code]);
+    }
     if (
       response.status === 404 &&
-      (path.startsWith("/v1/ofa") || path.startsWith("/v1/eyes"))
+      ["/v1/ofa", "/v1/eyes", "/v1/corpus"].some((p) => path.startsWith(p))
     )
       throw new Error(
         "OFA's brain is not running. Add a reasoning key to the companion's .env file and restart it.",
@@ -550,6 +593,39 @@ export function connectVoice(
         "/v1/desktop/continue",
         { task_id: task.task_id, handoff_id: task.handoff.id },
         true,
+      );
+    },
+    corpusDocuments: async (): Promise<CorpusDocument[]> => {
+      await ensureSession();
+      const reply = await request("/v1/corpus/open", undefined, true);
+      return Array.isArray(reply?.documents) ? reply.documents : [];
+    },
+    corpusRead: async (name: string): Promise<string> => {
+      await ensureSession();
+      const path = `/v1/corpus/open/${encodeURIComponent(name)}`;
+      return String((await request(path, undefined, true)).text ?? "");
+    },
+    corpusSave: async (name: string, text: string): Promise<void> => {
+      await ensureSession();
+      await request("/v1/corpus/open/save", { name, text }, true);
+    },
+    corpusDelete: async (name: string): Promise<void> => {
+      await ensureSession();
+      await request("/v1/corpus/open/delete", { name }, true);
+    },
+    privateItems: async (): Promise<PrivateView> => {
+      await ensureSession();
+      return privateView(await request("/v1/corpus/private", undefined, true));
+    },
+    privateAction: async (
+      action: "unlock" | "lock" | "add" | "revoke" | "delete",
+      body: NewPrivateItem | { handle: string } | Record<string, never> = {},
+    ): Promise<PrivateView> => {
+      await ensureSession();
+      // Unlocking waits for you to answer the Windows prompt.
+      const wait = action === "unlock" ? 120000 : 5000;
+      return privateView(
+        await request(`/v1/corpus/private/${action}`, body, true, wait),
       );
     },
     ofaSettings: async (): Promise<OfaSettingsView> => {
