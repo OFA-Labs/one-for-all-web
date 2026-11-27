@@ -56,7 +56,40 @@ export type CompanionHealth = {
     deepgram_configured: boolean;
     gradium_configured: boolean;
     engine_enabled: boolean;
+    eyes_mode?: EyesMode | null;
+    eyes_ready?: boolean;
   };
+};
+/** How OFA understands the screen. Chosen in Settings → Eyes, stored by the companion. */
+export type EyesMode = "local" | "separate" | "reasoning";
+export type OfaSettings = {
+  eyes: { mode: EyesMode; model: string; whole_screen: boolean };
+  hands: { system_controls: boolean; answer_calls: boolean };
+  voice: { reply_language: "en" | "hi" | "hinglish" };
+};
+export type EyesStatus = {
+  mode: EyesMode;
+  model: string | null;
+  active: string;
+  sees_images: boolean;
+  reasoning_can_see: boolean;
+  note: string | null;
+};
+export type OfaSettingsView = {
+  settings: OfaSettings;
+  eyes: EyesStatus;
+  always_ask: string[];
+};
+export type SettingsPatch = {
+  [Section in keyof OfaSettings]?: Partial<OfaSettings[Section]>;
+};
+export type EyesPreview = {
+  image: string;
+  masked: string;
+  marks: number;
+  windows: string[];
+  sources: string[];
+  sent_anywhere: boolean;
 };
 export type DesktopState = {
   status: string;
@@ -70,6 +103,8 @@ export type DesktopState = {
   choices?: { id: string; label: string }[];
   filePreview?: string;
   health?: CompanionHealth;
+  /** null: the companion runs without OFA's brain (no reasoning key). */
+  ofa?: OfaSettingsView | null;
 };
 type Identity = {
   keys: CryptoKeyPair;
@@ -83,6 +118,16 @@ class GrantRevoked extends Error {
 }
 const endpoint =
   process.env.NEXT_PUBLIC_OFA_COMPANION_URL || "http://127.0.0.1:8767";
+
+/** Older companions do not know these settings; treat any other reply as "not available". */
+function settingsView(value: unknown): OfaSettingsView {
+  const view = value as Partial<OfaSettingsView> | null;
+  if (!view?.settings?.eyes || !view.eyes || !Array.isArray(view.always_ask))
+    throw new Error(
+      "This companion does not support OFA settings yet. Update and restart it.",
+    );
+  return view as OfaSettingsView;
+}
 
 async function database(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -166,6 +211,13 @@ export function connectVoice(
       );
     }
     if (response.status === 410) throw new GrantRevoked();
+    if (
+      response.status === 404 &&
+      (path.startsWith("/v1/ofa") || path.startsWith("/v1/eyes"))
+    )
+      throw new Error(
+        "OFA's brain is not running. Add a reasoning key to the companion's .env file and restart it.",
+      );
     if (!response.ok)
       throw new Error(
         response.status === 403
@@ -499,6 +551,18 @@ export function connectVoice(
         { task_id: task.task_id, handoff_id: task.handoff.id },
         true,
       );
+    },
+    ofaSettings: async (): Promise<OfaSettingsView> => {
+      await ensureSession();
+      return settingsView(await request("/v1/ofa/settings", undefined, true));
+    },
+    saveOfaSettings: async (patch: SettingsPatch): Promise<OfaSettingsView> => {
+      await ensureSession();
+      return settingsView(await request("/v1/ofa/settings", patch, true));
+    },
+    eyesPreview: async (): Promise<EyesPreview> => {
+      await ensureSession();
+      return request("/v1/eyes/preview", {}, true);
     },
     disconnect,
     close: () => {
