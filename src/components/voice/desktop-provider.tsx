@@ -4,6 +4,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -13,11 +14,23 @@ import {
   type DesktopState,
   type DesktopTask,
   type EyesPreview,
+  type NewPrivateItem,
   type SettingsPatch,
 } from "@/lib/voice/local-development-client";
 
 type Client = ReturnType<typeof connectVoice>;
+/** Info Corpus calls; each rejects with a readable message. */
+export type CorpusApi = Pick<
+  Client,
+  | "corpusDocuments"
+  | "corpusRead"
+  | "corpusSave"
+  | "corpusDelete"
+  | "privateItems"
+  | "privateAction"
+>;
 const Context = createContext<{
+  corpus: CorpusApi;
   state: DesktopState;
   run: (action: "connect" | "stop" | "disconnect" | "quit") => void;
   scope: (kind: string) => void;
@@ -122,9 +135,28 @@ export function DesktopProvider({ children }: { children: ReactNode }) {
       .then((ofa) => setState((current) => ({ ...current, ofa })))
       .catch(() => setState((current) => ({ ...current, ofa: null })));
   }, [state.connected]);
+  const corpus = useMemo<CorpusApi>(() => {
+    const connected = () => {
+      if (!client.current) throw new Error("Connect this computer first.");
+      return client.current;
+    };
+    return {
+      corpusDocuments: async () => connected().corpusDocuments(),
+      corpusRead: async (name: string) => connected().corpusRead(name),
+      corpusSave: async (name: string, text: string) =>
+        connected().corpusSave(name, text),
+      corpusDelete: async (name: string) => connected().corpusDelete(name),
+      privateItems: async () => connected().privateItems(),
+      privateAction: async (
+        action: "unlock" | "lock" | "add" | "revoke" | "delete",
+        body?: NewPrivateItem | { handle: string } | Record<string, never>,
+      ) => connected().privateAction(action, body),
+    };
+  }, []);
   return (
     <Context.Provider
       value={{
+        corpus,
         state,
         run,
         scope: (kind) => handle(client.current?.scope(kind)),

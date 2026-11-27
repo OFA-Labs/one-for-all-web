@@ -8,6 +8,7 @@ import { CapacityMeter } from "./capacity-meter";
 import { EBrainEmpty, EBrainError, EBrainLoading } from "./ebrain-states";
 import { HealState } from "./heal-state";
 import { HonestyPanel } from "./honesty-panel";
+import { InfoCorpus } from "./info-corpus/info-corpus";
 import { MemoryList } from "./memory-list";
 import { PairsReview } from "./pairs-review";
 import { useEBrainLimits } from "./use-ebrain-limits";
@@ -48,6 +49,7 @@ export function EBrain() {
           ) : undefined
         }
       />
+      <InfoCorpus />
       {limits.state === "loading" && <EBrainLoading />}
       {limits.state === "error" && (
         <EBrainError
