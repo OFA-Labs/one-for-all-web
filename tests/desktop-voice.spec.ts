@@ -72,6 +72,7 @@ test("desktop scope and exact-action approval UI send only bound decisions", asy
   await expect(
     page.getByRole("button", { name: "Computer connected", exact: true }),
   ).toBeDisabled();
+  await page.getByRole("tab", { name: "Hands" }).click();
   await page
     .getByRole("button", { name: "Enable window controls", exact: true })
     .click();

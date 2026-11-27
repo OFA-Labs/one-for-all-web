@@ -30,17 +30,17 @@ test("settings shows live companion speech status and no preview-only controls",
   });
 
   await page.goto("/settings?tab=desktop");
-  await page.getByRole("button", { name: "Check companion status" }).click();
   await expect(
     page.getByRole("heading", { name: "Desktop Integration" }),
   ).toBeVisible();
-  await expect(page.getByText("Companion 0.2.3")).toBeVisible();
+  for (const tab of ["Connection", "Voice", "Eyes", "Hands", "Dictation"])
+    await expect(page.getByRole("tab", { name: tab })).toBeVisible();
+  await page.getByRole("tab", { name: "Voice" }).click();
+  await page.getByRole("button", { name: "Check companion status" }).click();
   await expect(page.getByText(/Deepgram configured/)).toBeVisible();
   await expect(page.getByText(/Gradium configured/)).toBeVisible();
-  await expect(
-    page.getByRole("tab", { name: "Computer & voice" }),
-  ).toBeVisible();
-  await expect(page.getByRole("tab", { name: "Dictation" })).toBeVisible();
+  await page.getByRole("tab", { name: "Connection" }).click();
+  await expect(page.getByText("Companion 0.2.3")).toBeVisible();
 
   const body = await page.locator("body").innerText();
   for (const stale of [
@@ -61,7 +61,11 @@ test("pairing shows a minimal approval card instead of plain status text", async
     const path = new URL(route.request().url()).pathname;
     const result =
       path === "/v1/health"
-        ? { version: "0.2.3", os: "windows", identity_mode: "local-development" }
+        ? {
+            version: "0.2.3",
+            os: "windows",
+            identity_mode: "local-development",
+          }
         : path === "/v1/pairing"
           ? { request_id: "pending", fingerprint: "TEST KEY" }
           : path === "/v1/pairing/pending"
@@ -71,7 +75,9 @@ test("pairing shows a minimal approval card instead of plain status text", async
   });
 
   await page.goto("/settings?tab=desktop");
-  await page.getByRole("button", { name: "Connect computer", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Connect computer", exact: true })
+    .click();
   const card = page.locator("div[role='status']").filter({
     hasText: "Approve on Windows",
   });
