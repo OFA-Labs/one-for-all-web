@@ -12,6 +12,8 @@ import {
   connectVoice,
   type DesktopState,
   type DesktopTask,
+  type EyesPreview,
+  type SettingsPatch,
 } from "@/lib/voice/local-development-client";
 
 type Client = ReturnType<typeof connectVoice>;
@@ -25,6 +27,10 @@ const Context = createContext<{
   answer: (option: string) => void;
   continueTask: () => void;
   chooseApp: (option: string) => void;
+  /** Save Eyes / Hands / Voice settings on the companion. */
+  saveOfa: (patch: SettingsPatch) => void;
+  /** One masked, numbered screenshot, shown only on this page. */
+  eyesPreview: () => Promise<EyesPreview>;
 } | null>(null);
 export function useDesktop() {
   const context = useContext(Context);
@@ -109,6 +115,13 @@ export function DesktopProvider({ children }: { children: ReactNode }) {
   const checkCompanion = useCallback(() => {
     void client.current?.refreshHealth().catch(() => undefined);
   }, []);
+  useEffect(() => {
+    if (!state.connected) return;
+    client.current
+      ?.ofaSettings()
+      .then((ofa) => setState((current) => ({ ...current, ofa })))
+      .catch(() => setState((current) => ({ ...current, ofa: null })));
+  }, [state.connected]);
   return (
     <Context.Provider
       value={{
@@ -127,6 +140,20 @@ export function DesktopProvider({ children }: { children: ReactNode }) {
           if (state.task) handle(client.current?.continueTask(state.task));
         },
         chooseApp: (option) => handle(client.current?.chooseApp(option)),
+        saveOfa: (patch) =>
+          handle(
+            client.current?.saveOfaSettings(patch).then((ofa) =>
+              setState((current) => ({
+                ...current,
+                ofa,
+                text: "Settings saved on this computer.",
+              })),
+            ),
+          ),
+        eyesPreview: () =>
+          client.current
+            ? client.current.eyesPreview()
+            : Promise.reject(new Error("Connect this computer first.")),
       }}
     >
       {children}
