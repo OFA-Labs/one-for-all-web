@@ -52,6 +52,7 @@ async function companion(page: Page) {
           service: body.service,
           label: body.label,
           allowed_targets: [body.site],
+          expected_account: body.account ?? "",
           revoked: false,
         });
       }
@@ -106,7 +107,29 @@ test("private items need unlocking, are added once and never shown", async ({
   ).toContainText("gmail · password");
   await expect(secret).toHaveValue("");
   expect(added[0]).toMatchObject({ value: "not-a-real-secret" });
+  // Left empty, the field is not sent, so an older companion still accepts the item.
+  expect(added[0]).not.toHaveProperty("account");
   expect(await corpus.innerText()).not.toContain("not-a-real-secret");
+});
+
+test("a private item can be tied to one account", async ({ page }) => {
+  const { corpus, added } = await companion(page);
+  await corpus.getByRole("tab", { name: "Private" }).click();
+  await corpus.getByRole("button", { name: "Unlock", exact: true }).click();
+  await corpus.getByLabel("Service", { exact: true }).fill("gmail");
+  await corpus.getByLabel("Item name").fill("password");
+  await corpus.getByLabel("Secret value").fill("not-a-real-secret");
+  await corpus
+    .getByLabel("Website where it may be used")
+    .fill("https://accounts.google.com");
+  const account = corpus.getByLabel("Account it belongs to (optional)");
+  await account.fill("  asha@example.test ");
+  await corpus.getByRole("button", { name: "Save private item" }).click();
+  await expect(
+    corpus.getByRole("list", { name: "Private items" }),
+  ).toContainText("Only for asha@example.test");
+  expect(added[0]).toMatchObject({ account: "asha@example.test" });
+  await expect(account).toHaveValue("");
 });
 
 test("without a companion the section asks to connect", async ({ page }) => {
