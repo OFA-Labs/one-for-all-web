@@ -99,6 +99,7 @@ export type PrivateItem = {
   service: string;
   label: string;
   allowed_targets: string[];
+  expected_account?: string;
   revoked: boolean | number;
 };
 export type PrivateView = { unlocked: boolean; items: PrivateItem[] };
@@ -108,6 +109,8 @@ export type NewPrivateItem = {
   value: string;
   site: string;
   sensitive: boolean;
+  /** If set, the secret is filled only while the page shows this account. */
+  account?: string;
 };
 const CORPUS_ERRORS: Record<string, string> = {
   VAULT_LOCKED: "Unlock private items first.",

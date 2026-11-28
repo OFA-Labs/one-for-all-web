@@ -8,7 +8,14 @@ import type { PrivateView } from "@/lib/voice/local-development-client";
 
 const message = (reason: unknown) =>
   reason instanceof Error ? reason.message : "That did not work.";
-const EMPTY = { service: "", label: "", value: "", site: "", sensitive: false };
+const EMPTY = {
+  service: "",
+  label: "",
+  value: "",
+  site: "",
+  account: "",
+  sensitive: false,
+};
 
 /** Passwords and other secrets: OFA can use them, never see them, and asks aloud before every use. */
 export function PrivateItems() {
@@ -42,11 +49,14 @@ export function PrivateItems() {
       });
   const add = (event: FormEvent) => {
     event.preventDefault();
-    void act("add", item, "Saved. The value cannot be read back.").then(
+    const { account, ...rest } = item;
+    // An empty account is left out: it means "any account".
+    const body = account.trim() ? { ...rest, account: account.trim() } : rest;
+    void act("add", body, "Saved. The value cannot be read back.").then(
       (ok) => ok && setItem(EMPTY),
     );
   };
-  const set = (key: "service" | "label" | "value" | "site") => ({
+  const set = (key: "service" | "label" | "value" | "site" | "account") => ({
     value: item[key],
     onChange: (event: { target: { value: string } }) =>
       setItem((current) => ({ ...current, [key]: event.target.value })),
@@ -92,6 +102,9 @@ export function PrivateItems() {
               {entry.service} · {entry.label}
             </span>
             <span>{entry.allowed_targets.join(", ")}</span>
+            {entry.expected_account ? (
+              <span>Only for {entry.expected_account}</span>
+            ) : null}
             {entry.revoked ? <span className="muted">Revoked</span> : null}
             <span className="button-row ml-auto">
               <Button
@@ -140,6 +153,19 @@ export function PrivateItems() {
             {...set("site")}
           />
         </label>
+        <label className="grid gap-1">
+          <span>Account it belongs to (optional)</span>
+          <Input
+            maxLength={200}
+            placeholder="name@example.com"
+            aria-describedby="private-account-help"
+            {...set("account")}
+          />
+        </label>
+        <p id="private-account-help" className="muted">
+          If you set this, OFA fills the item only while the page shows this
+          account.
+        </p>
         <label className="flex items-center gap-3">
           <Switch
             checked={item.sensitive}
